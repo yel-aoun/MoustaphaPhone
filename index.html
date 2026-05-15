@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/src/assets/logo.png" />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Client Store, boutique tech au Maroc: accessoires, périphériques, offres et livraison partout au Maroc." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Client Store - Boutique tech au Maroc" />
+    <meta property="og:description" content="Accessoires, périphériques et produits tech avec livraison partout au Maroc." />
+    <meta name="twitter:card" content="summary" />
+    <title>Client Store - Boutique tech au Maroc</title>
+    <script>
+      (function () {
+        var stored = localStorage.getItem('client_store_theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored === 'dark' || (!stored && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

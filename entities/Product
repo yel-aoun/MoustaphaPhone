@@ -1,0 +1,50 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "price": {
+      "type": "number",
+      "description": "Product price in MAD"
+    },
+    "original_price": {
+      "type": "number",
+      "description": "Original price before discount"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Audio",
+        "Wearables",
+        "Displays",
+        "Peripherals",
+        "Phones",
+        "Accessories"
+      ],
+      "description": "Product category"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Main product image URL"
+    },
+    "extra_images": {
+      "type": "array",
+      "description": "Additional product images",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description"
+    }
+  },
+  "required": [
+    "name",
+    "price",
+    "category"
+  ]
+}
