@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useHeroConfig } from '@/lib/heroStore';
+import { useHeroConfig, readLegacyLocalHeroConfig, clearLegacyLocalHeroConfig } from '@/lib/heroStore';
 import {
   GripVertical, Trash2, ChevronUp, ChevronDown,
-  Search, Plus, Save, Image, RotateCcw, Info, MonitorSmartphone, ShoppingCart,
+  Search, Plus, Save, Image, RotateCcw, Info, MonitorSmartphone, ShoppingCart, Loader2, Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,13 +14,29 @@ import { formatMoney } from '@/lib/products';
 import { storeBrand } from '@/lib/brand';
 
 export default function AdminHeroManager() {
-  const { config, save } = useHeroConfig();
+  const { config, save, isLoading } = useHeroConfig();
 
   // Local editable state (only committed when "Save" is clicked)
   const [defaultTitle, setDefaultTitle] = useState(config.defaultTitle);
   const [defaultSubtitle, setDefaultSubtitle] = useState(config.defaultSubtitle);
   const [slides, setSlides] = useState(config.slides);
   const [productSearch, setProductSearch] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [legacyConfig, setLegacyConfig] = useState(null);
+  const seededRef = useRef(false);
+
+  // The saved config arrives from the server after mount; load it into the form once.
+  useEffect(() => {
+    if (isLoading || seededRef.current) return;
+    seededRef.current = true;
+    setDefaultTitle(config.defaultTitle);
+    setDefaultSubtitle(config.defaultSubtitle);
+    setSlides(config.slides);
+    if (config.slides.length === 0) {
+      const legacy = readLegacyLocalHeroConfig();
+      if (legacy) setLegacyConfig(legacy);
+    }
+  }, [isLoading, config]);
 
   const { data: allProducts = [] } = useQuery({
     queryKey: ['products'],
@@ -62,13 +78,30 @@ export default function AdminHeroManager() {
     });
   };
 
-  const handleSave = () => {
-    save({
-      defaultTitle,
-      defaultSubtitle,
-      slides: slides.map((slide) => ({ productId: slide.productId })),
-    });
-    toast.success('Hero section sauvegardée !');
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await save({
+        defaultTitle,
+        defaultSubtitle,
+        slides: slides.map((slide) => ({ productId: slide.productId })),
+      });
+      clearLegacyLocalHeroConfig();
+      setLegacyConfig(null);
+      toast.success('Hero section sauvegardée — visible par tous les visiteurs.');
+    } catch (error) {
+      toast.error(`Sauvegarde impossible : ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const loadLegacyConfig = () => {
+    if (!legacyConfig) return;
+    setDefaultTitle(legacyConfig.defaultTitle);
+    setDefaultSubtitle(legacyConfig.defaultSubtitle);
+    setSlides(legacyConfig.slides);
+    toast.info('Sélection récupérée — cliquez sur Sauvegarder pour la publier.');
   };
 
   const handleReset = () => {
@@ -108,12 +141,32 @@ export default function AdminHeroManager() {
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
             Annuler
           </Button>
-          <Button size="sm" onClick={handleSave} className="bg-primary hover:bg-primary/90 text-xs">
-            <Save className="w-3.5 h-3.5 mr-1.5" />
+          <Button size="sm" onClick={handleSave} disabled={saving || isLoading} className="bg-primary hover:bg-primary/90 text-xs">
+            {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
             Sauvegarder
           </Button>
         </div>
       </div>
+
+      {legacyConfig && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-amber-100">
+            Une ancienne sélection de {legacyConfig.slides.length} produit{legacyConfig.slides.length > 1 ? 's' : ''} est
+            enregistrée uniquement dans ce navigateur. Les visiteurs ne la voient pas encore.
+          </p>
+          <Button size="sm" variant="outline" onClick={loadLegacyConfig} className="shrink-0 border-amber-400/40 text-amber-100 hover:bg-amber-500/20">
+            <Upload className="w-3.5 h-3.5 mr-1.5" />
+            Récupérer
+          </Button>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Chargement de la configuration…
+        </div>
+      )}
 
       {/* Default message */}
       <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
@@ -137,7 +190,7 @@ export default function AdminHeroManager() {
             <Input
               value={defaultSubtitle}
               onChange={(e) => setDefaultSubtitle(e.target.value)}
-              placeholder="Souris, claviers et casques fiables, livrés partout au Maroc."
+              placeholder="Smartphones, coques et accessoires originaux, livrés partout au Maroc."
               className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-primary/40"
             />
           </div>

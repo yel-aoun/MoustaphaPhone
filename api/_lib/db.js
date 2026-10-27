@@ -78,6 +78,13 @@ export async function ensureSchema() {
     `;
     await db`CREATE INDEX IF NOT EXISTS analytics_events_type_created_idx ON analytics_events (event_type, created_at DESC)`;
     await db`CREATE INDEX IF NOT EXISTS analytics_events_product_created_idx ON analytics_events (product_id, created_at DESC)`;
+    await db`
+      CREATE TABLE IF NOT EXISTS site_settings (
+        key TEXT PRIMARY KEY,
+        value JSONB NOT NULL DEFAULT '{}',
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `;
 
     const [{ count }] = await db`SELECT COUNT(*)::int AS count FROM categories`;
     if (count === 0) {

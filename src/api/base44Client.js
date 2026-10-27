@@ -88,6 +88,11 @@ export const adminAuth = {
 
 export { ADMIN_AUTH_EVENT };
 
+export const heroConfigStore = {
+  get: () => apiFetch('/api/hero'),
+  save: (config) => apiFetch('/api/hero', { method: 'PUT', body: JSON.stringify(config) }),
+};
+
 export const categoryStore = {
   list: () => apiFetch('/api/categories'),
 
