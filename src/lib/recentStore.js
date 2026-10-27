@@ -8,7 +8,7 @@ const LIMIT = 8;
 export function addRecentlyViewed(product) {
   if (!product?.id) return;
   try {
-    const current = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    const current = getRecentlyViewedIds();
     const next = [product.id, ...current.filter((id) => id !== product.id)].slice(0, LIMIT);
     localStorage.setItem(RECENT_KEY, JSON.stringify(next));
     window.dispatchEvent(new Event(RECENT_UPDATED_EVENT));
@@ -19,7 +19,8 @@ export function addRecentlyViewed(product) {
 
 export function getRecentlyViewedIds() {
   try {
-    return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    const stored = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    return Array.isArray(stored) ? stored : [];
   } catch {
     return [];
   }

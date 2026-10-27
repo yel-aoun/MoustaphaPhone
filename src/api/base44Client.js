@@ -172,7 +172,7 @@ export const base44 = {
   },
 
   analytics: {
-    summary: (days = 30) => apiFetch(`/api/analytics?days=${days}`),
+    summary: (days = 30) => apiFetch(`/api/events?days=${days}`),
   },
 
   integrations: {

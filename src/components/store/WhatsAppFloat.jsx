@@ -1,7 +1,7 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/storeEvents';
 import { buildWhatsAppLink, storeBrand } from '@/lib/brand';
 
 export default function WhatsAppFloat({ cart = [] }) {

@@ -128,7 +128,7 @@ export default function AdminHeroManager() {
             <Input
               value={defaultTitle}
               onChange={(e) => setDefaultTitle(e.target.value)}
-              placeholder="Logitech Essentials pour votre bureau."
+              placeholder="La tech de 2026, livrée chez vous."
               className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-primary/40"
             />
           </div>

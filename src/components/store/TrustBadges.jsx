@@ -7,29 +7,21 @@ const BADGES = [
   { icon: Headphones,   label: 'Support 7j/7',            sub: 'Via WhatsApp, réponse rapide'  },
 ];
 
-// Border classes per item for 2-col mobile → 4-col desktop grid
-const BORDERS = [
-  'border-r border-b border-border/50 lg:border-b-0',   // 0 — top-left
-  'border-b border-border/50 lg:border-b-0 lg:border-r', // 1 — top-right (mobile) / 2nd col
-  'border-r border-border/50 lg:border-r-0',             // 2 — bottom-left (mobile) / 3rd col
-  '',                                                     // 3 — last: no border
-];
-
 export default function TrustBadges() {
   return (
-    <div className="border-y border-border/60 bg-secondary/25 py-8">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 px-4 sm:px-6 lg:grid-cols-4 lg:px-10">
-        {BADGES.map(({ icon: Icon, label, sub }, i) => (
+    <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-10">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {BADGES.map(({ icon: Icon, label, sub }) => (
           <div
             key={label}
-            className={`flex flex-col items-center gap-3 px-4 py-4 text-center sm:px-6 ${BORDERS[i]}`}
+            className="group flex flex-col gap-4 rounded-3xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30"
           >
-            <Icon className="w-8 h-8 text-primary" strokeWidth={1.5} />
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground text-background transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <Icon className="h-5 w-5" strokeWidth={1.75} />
+            </span>
             <div>
-              <p className="text-sm font-extrabold leading-tight tracking-wider text-foreground uppercase">
-                {label}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub}</p>
+              <p className="text-sm font-semibold leading-tight text-foreground">{label}</p>
+              <p className="mt-1 text-xs leading-snug text-muted-foreground">{sub}</p>
             </div>
           </div>
         ))}

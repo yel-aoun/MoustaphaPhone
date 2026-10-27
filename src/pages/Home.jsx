@@ -10,12 +10,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useSeo } from '@/lib/seo';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/storeEvents';
 import { useCategories } from '@/hooks/useCategories';
 import { formatMoney, slugify } from '@/lib/products';
 import { storeBrand } from '@/lib/brand';
 import Header from '@/components/store/Header';
 import HeroSlider from '@/components/store/HeroSlider';
+import CategoryShowcase from '@/components/store/CategoryShowcase';
 import TrustBadges from '@/components/store/TrustBadges';
 import CategoryBar from '@/components/store/CategoryBar';
 import ProductGrid from '@/components/store/ProductGrid';
@@ -408,6 +409,10 @@ export default function Home() {
           <>
             <HeroSlider products={heroProducts} heroConfig={heroConfig} onQuickView={setSelectedProduct} />
 
+            {activeCategory === 'Tous' && (
+              <CategoryShowcase products={activeProducts} onSelect={handleCategorySelect} />
+            )}
+
             {onSale.length > 0 && (
               <FeaturedSection
                 title="Offres du moment"
@@ -432,52 +437,53 @@ export default function Home() {
           </>
         )}
 
-        <section className="mb-6 grid gap-3 sm:grid-cols-3">
-          <div className="flex items-center gap-3 border-y border-border bg-secondary/30 px-1 py-3 sm:rounded-lg sm:border sm:px-4">
-            <Truck className="h-5 w-5 shrink-0 text-primary" />
+        <section className="mb-8 grid gap-2 sm:grid-cols-3 sm:gap-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-4 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10"><Truck className="h-4 w-4 text-primary" /></span>
             <div>
-              <p className="text-sm font-bold text-foreground">Livraison 24-72h</p>
+              <p className="text-sm font-semibold text-foreground">Livraison 24-72h</p>
               <p className="text-xs text-muted-foreground">Partout au Maroc selon la ville</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 border-y border-border bg-secondary/30 px-1 py-3 sm:rounded-lg sm:border sm:px-4">
-            <PackageCheck className="h-5 w-5 shrink-0 text-primary" />
+          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-4 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10"><PackageCheck className="h-4 w-4 text-primary" /></span>
             <div>
-              <p className="text-sm font-bold text-foreground">Stock clair</p>
+              <p className="text-sm font-semibold text-foreground">Stock clair</p>
               <p className="text-xs text-muted-foreground">Disponibilité affichée sur chaque produit</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 border-y border-border bg-secondary/30 px-1 py-3 sm:rounded-lg sm:border sm:px-4">
-            <ShieldCheck className="h-5 w-5 shrink-0 text-primary" />
+          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-4 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10"><ShieldCheck className="h-4 w-4 text-primary" /></span>
             <div>
-              <p className="text-sm font-bold text-foreground">Paiement à la livraison</p>
+              <p className="text-sm font-semibold text-foreground">Paiement à la livraison</p>
               <p className="text-xs text-muted-foreground">Confirmation rapide par WhatsApp</p>
             </div>
           </div>
         </section>
 
         {activeCategory !== 'Tous' && (
-          <section className="mb-6 overflow-hidden border-y border-border bg-secondary/25 px-4 py-5 sm:rounded-lg sm:border sm:px-5">
+          <section className="relative mb-6 overflow-hidden rounded-3xl border border-border/70 bg-card px-5 py-6 sm:px-7">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.18),transparent_65%)]" />
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-primary">Catégorie</p>
-                <h1 className="mt-1 text-2xl font-extrabold tracking-normal text-foreground sm:text-3xl">
+                <p className="section-eyebrow"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Catégorie</p>
+                <h1 className="mt-2 text-3xl font-semibold text-foreground sm:text-4xl">
                   {activeCategory}
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
                   {categoryProducts.length} produit{categoryProducts.length !== 1 ? 's' : ''}, livraison rapide et paiement à la réception.
                 </p>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[360px]">
-                <div className="rounded-lg border border-border bg-background px-3 py-2">
+              <div className="relative grid grid-cols-3 gap-2 text-center sm:min-w-[360px]">
+                <div className="rounded-2xl border border-border/70 bg-background/60 px-3 py-2.5 backdrop-blur">
                   <p className="font-mono text-lg font-extrabold text-foreground">{categoryStats.inStockCount}</p>
                   <p className="text-[11px] font-semibold text-muted-foreground">En stock</p>
                 </div>
-                <div className="rounded-lg border border-border bg-background px-3 py-2">
+                <div className="rounded-2xl border border-border/70 bg-background/60 px-3 py-2.5 backdrop-blur">
                   <p className="font-mono text-lg font-extrabold text-foreground">{categoryStats.promoCount}</p>
                   <p className="text-[11px] font-semibold text-muted-foreground">Promos</p>
                 </div>
-                <div className="rounded-lg border border-border bg-background px-3 py-2">
+                <div className="rounded-2xl border border-border/70 bg-background/60 px-3 py-2.5 backdrop-blur">
                   <p className="font-mono text-sm font-extrabold text-foreground sm:text-base">
                     {categoryStats.bestPrice ? formatMoney(categoryStats.bestPrice) : '-'}
                   </p>
@@ -489,12 +495,12 @@ export default function Home() {
         )}
 
         <div id="catalogue" className="scroll-mt-[calc(var(--header-h,160px)+18px)]">
-          <div className="mb-4 rounded-lg border border-border bg-background p-3 shadow-sm sm:p-4">
+          <div className="glass mb-4 rounded-[22px] p-3 shadow-none sm:p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <h2 className="text-xl font-extrabold tracking-normal text-foreground">Catalogue</h2>
-                  <span className="text-sm font-medium text-muted-foreground">
+                  <h2 className="text-2xl font-semibold text-foreground">Catalogue</h2>
+                  <span className="font-mono text-xs font-medium text-muted-foreground">
                     {sorted.length} produit{sorted.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -506,12 +512,12 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setFiltersOpen(true)}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary sm:hidden"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-foreground px-4 text-sm font-semibold text-background sm:hidden"
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 Filtres
                 {activeFilterCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-neon px-1.5 text-[11px] font-bold text-neon-foreground">
                     {activeFilterCount}
                   </span>
                 )}
@@ -521,7 +527,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setSaleOnly((v) => !v)}
-                  className={`inline-flex h-9 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition-colors ${
+                  className={`inline-flex h-9 items-center justify-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-colors ${
                     saleOnly
                       ? 'border-orange-500/30 bg-orange-500/10 text-orange-500'
                       : 'border-border bg-secondary text-foreground hover:border-orange-500/30 hover:text-orange-500'
@@ -535,7 +541,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setInStockOnly((v) => !v)}
-                  className={`inline-flex h-9 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition-colors ${
+                  className={`inline-flex h-9 items-center justify-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-colors ${
                     inStockOnly
                       ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
                       : 'border-border bg-secondary text-foreground hover:border-emerald-500/30 hover:text-emerald-600'
@@ -547,14 +553,14 @@ export default function Home() {
                 </button>
 
                 {/* Price range filter */}
-                <div className="col-span-2 flex h-9 items-center gap-1.5 rounded-lg border border-border bg-secondary px-2 sm:col-span-1">
+                <div className="col-span-2 flex h-9 items-center gap-1.5 rounded-full border border-border bg-secondary px-3 sm:col-span-1">
                   <span className="shrink-0 text-xs font-medium text-muted-foreground">Prix</span>
                   <input
                     type="number"
                     placeholder="Min"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
-                    className="h-7 w-full min-w-0 rounded-md bg-background px-2 text-sm text-foreground outline-none ring-0 transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-primary/30 sm:w-20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="h-7 w-full min-w-0 rounded-full bg-background px-2.5 font-mono text-sm text-foreground outline-none ring-0 transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-primary/30 sm:w-20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <span className="text-xs text-muted-foreground">-</span>
                   <input
@@ -562,14 +568,14 @@ export default function Home() {
                     placeholder="Max"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
-                    className="h-7 w-full min-w-0 rounded-md bg-background px-2 text-sm text-foreground outline-none ring-0 transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-primary/30 sm:w-20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="h-7 w-full min-w-0 rounded-full bg-background px-2.5 font-mono text-sm text-foreground outline-none ring-0 transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-primary/30 sm:w-20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <span className="shrink-0 text-xs font-medium text-muted-foreground">MAD</span>
                 </div>
 
                 {/* Sort dropdown */}
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-9 w-full border-border bg-secondary text-sm focus:ring-primary/30 sm:w-[156px]">
+                  <SelectTrigger className="h-9 w-full rounded-full border-border bg-secondary px-4 text-sm focus:ring-primary/30 sm:w-[160px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -744,20 +750,20 @@ export default function Home() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             onClick={() => setCartOpen(true)}
-            className="fixed inset-x-0 bottom-16 z-40 flex min-h-16 items-center justify-between gap-3 border-t border-border bg-background/96 px-4 py-3 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur sm:hidden"
+            className="fixed inset-x-3 bottom-[76px] z-40 flex min-h-14 items-center justify-between gap-3 rounded-[20px] bg-foreground px-3 py-2.5 text-background shadow-2xl sm:hidden"
           >
             <span className="flex items-center gap-3 text-left">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-background/10">
                 <ShoppingCart className="h-5 w-5" />
               </span>
               <span>
-                <span className="block text-sm font-bold text-foreground">
+                <span className="block text-sm font-semibold">
                   Panier · {totalItems} article{totalItems > 1 ? 's' : ''}
                 </span>
-                <span className="block font-mono text-sm font-extrabold text-primary">{formatMoney(totalPrice)}</span>
+                <span className="block font-mono text-sm font-bold text-neon">{formatMoney(totalPrice)}</span>
               </span>
             </span>
-            <span className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">
+            <span className="rounded-full bg-neon px-4 py-2 text-xs font-bold text-neon-foreground">
               Voir
             </span>
           </motion.button>
@@ -772,7 +778,7 @@ export default function Home() {
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.2 }}
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-52 right-6 z-40 w-11 h-11 rounded-full bg-background border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors sm:bottom-24"
+            className="glass fixed bottom-40 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground sm:bottom-24 sm:right-6"
             aria-label="Retour en haut"
           >
             <ChevronUp className="w-5 h-5" />

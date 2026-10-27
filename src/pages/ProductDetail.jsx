@@ -42,7 +42,7 @@ import { formatMoney, getProductUrl, productMatchesSlug, slugify } from '@/lib/p
 import { storeBrand } from '@/lib/brand';
 import { getColorForImage, getColorImageIndex, getProductImages } from '@/lib/productOptions';
 import { productJsonLd, useSeo } from '@/lib/seo';
-import { trackProductEvent } from '@/lib/analytics';
+import { trackProductEvent } from '@/lib/storeEvents';
 import { toast } from 'sonner';
 
 const BADGE_LABELS = {

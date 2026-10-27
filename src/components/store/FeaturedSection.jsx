@@ -13,35 +13,38 @@ export default function FeaturedSection({ title, subtitle, products, onAddToCart
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="mb-12">
+    <section className="mb-14">
       {/* Header row */}
-      <div className="mb-4 flex items-end justify-between gap-3">
+      <div className="mb-5 flex items-end justify-between gap-3">
         <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl font-extrabold tracking-normal text-foreground">{title}</h2>
-            {onViewAll && (
-              <button
-                onClick={onViewAll}
-                className="mb-0.5 flex items-center gap-0.5 text-xs font-semibold text-primary transition-colors hover:underline underline-offset-2"
-              >
-                Voir tout
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-          {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+          {subtitle && (
+            <p className="section-eyebrow">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              {subtitle}
+            </p>
+          )}
+          <h2 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">{title}</h2>
         </div>
-        <div className="hidden gap-1.5 shrink-0 sm:flex">
+        <div className="flex shrink-0 items-center gap-1.5">
+          {onViewAll && (
+            <button
+              onClick={onViewAll}
+              className="mr-1 flex h-9 items-center gap-1 rounded-full border border-border bg-card px-3.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              Voir tout
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             onClick={() => scroll(-1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background transition-colors hover:bg-secondary"
+            className="hidden h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary sm:flex"
             aria-label="Faire defiler vers la gauche"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => scroll(1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background transition-colors hover:bg-secondary"
+            className="hidden h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary sm:flex"
             aria-label="Faire defiler vers la droite"
           >
             <ChevronRight className="w-4 h-4" />
@@ -53,8 +56,7 @@ export default function FeaturedSection({ title, subtitle, products, onAddToCart
       <div className="relative">
         <div
           ref={scrollRef}
-          className="flex snap-x items-stretch gap-3 overflow-x-auto pb-2 sm:gap-4"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          className="no-scrollbar flex snap-x items-stretch gap-3 overflow-x-auto pb-3 pt-1 sm:gap-4"
         >
           {products.map((product) => (
             <div key={product.id} className="w-48 shrink-0 snap-start sm:w-56 md:w-60">
@@ -67,7 +69,7 @@ export default function FeaturedSection({ title, subtitle, products, onAddToCart
           ))}
         </div>
         {/* Right-edge fade hint */}
-        <div className="pointer-events-none absolute top-0 right-0 bottom-2 w-16 bg-gradient-to-l from-background to-transparent" />
+        <div className="pointer-events-none absolute top-0 right-0 bottom-3 w-16 bg-gradient-to-l from-background to-transparent" />
       </div>
     </section>
   );

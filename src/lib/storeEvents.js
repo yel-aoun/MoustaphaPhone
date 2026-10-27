@@ -1,4 +1,4 @@
-const ANALYTICS_URL = '/api/analytics';
+const EVENTS_URL = '/api/events';
 
 export function trackEvent(eventType, payload = {}) {
   const event = {
@@ -16,14 +16,14 @@ export function trackEvent(eventType, payload = {}) {
   try {
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: 'application/json' });
-      navigator.sendBeacon(ANALYTICS_URL, blob);
+      navigator.sendBeacon(EVENTS_URL, blob);
       return;
     }
   } catch {
     // Fall back to fetch.
   }
 
-  fetch(ANALYTICS_URL, {
+  fetch(EVENTS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body,

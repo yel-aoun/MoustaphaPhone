@@ -7,7 +7,8 @@ const MAX_COMPARE = 3;
 
 function readCompare() {
   try {
-    return JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
+    const stored = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
+    return Array.isArray(stored) ? stored : [];
   } catch {
     return [];
   }

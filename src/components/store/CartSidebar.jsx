@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { buildWhatsAppURL, getCartItemKey } from '@/lib/cartStore';
 import { base44 } from '@/api/base44Client';
 import { cloudinaryImage } from '@/lib/images';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/storeEvents';
 import { toPublicUrl } from '@/lib/products';
 import { getImageForColor, getProductColors } from '@/lib/productOptions';
 

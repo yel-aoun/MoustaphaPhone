@@ -33,7 +33,8 @@ function getVariantMeta(product, selectedColorInput = null) {
 
 function getCart() {
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    const stored = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    return Array.isArray(stored) ? stored : [];
   } catch {
     return [];
   }

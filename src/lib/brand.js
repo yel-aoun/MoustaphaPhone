@@ -42,7 +42,8 @@ export const storeBrand = {
   siteUrl: trim(env.VITE_SITE_URL).replace(/\/+$/, ''),
 };
 
-export const storagePrefix = 'client_store';
+// Per-store key prefix so client stores never share browser data (cart, wishlist, theme...)
+export const storagePrefix = storeBrand.slug.replace(/-/g, '_');
 
 export function brandTitle(title) {
   const value = trim(title);

@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     if (!requireAdmin(req, res)) return;
 
     if (req.method === 'GET') {
-      const requestUrl = new URL(req.url || '/api/analytics', 'http://localhost');
+      const requestUrl = new URL(req.url || '/api/events', 'http://localhost');
       const days = Math.min(90, Math.max(1, Number(requestUrl.searchParams.get('days') || 30) || 30));
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 

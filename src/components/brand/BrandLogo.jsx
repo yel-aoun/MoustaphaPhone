@@ -5,7 +5,7 @@ const SIZE = {
   sm: {
     mark: 'h-8 w-8',
     image: 'h-6 w-6',
-    name: 'text-lg',
+    name: 'text-base sm:text-lg',
     sub: 'text-[10px]',
   },
   md: {
@@ -37,7 +37,7 @@ export default function BrandLogo({
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <span
-        className={`inline-flex ${cfg.mark} shrink-0 items-center justify-center rounded-lg border shadow-sm ${
+        className={`inline-flex ${cfg.mark} shrink-0 items-center justify-center rounded-xl border shadow-sm ${
           dark
             ? 'border-white/10 bg-white/[0.06] shadow-black/20'
             : 'border-border bg-background shadow-primary/10'
@@ -48,7 +48,7 @@ export default function BrandLogo({
 
       {showText && (
         <span className="min-w-0 leading-none">
-          <span className={`${cfg.name} block font-extrabold tracking-normal ${dark ? 'text-white' : 'text-foreground'}`}>
+          <span className={`${cfg.name} block whitespace-nowrap font-semibold tracking-tight ${dark ? 'text-white' : 'text-foreground'}`}>
             {leadingText}<span className="text-primary">{accentText}</span>
           </span>
           {subtitle && (

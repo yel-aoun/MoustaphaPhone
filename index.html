@@ -6,15 +6,15 @@
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Client Store, boutique tech au Maroc: accessoires, périphériques, offres et livraison partout au Maroc." />
+    <meta name="description" content="%VITE_STORE_DESCRIPTION%" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Client Store - Boutique tech au Maroc" />
-    <meta property="og:description" content="Accessoires, périphériques et produits tech avec livraison partout au Maroc." />
+    <meta property="og:title" content="%VITE_STORE_NAME% - %VITE_STORE_TAGLINE%" />
+    <meta property="og:description" content="%VITE_STORE_DESCRIPTION%" />
     <meta name="twitter:card" content="summary" />
-    <title>Client Store - Boutique tech au Maroc</title>
+    <title>%VITE_STORE_NAME% - %VITE_STORE_TAGLINE%</title>
     <script>
       (function () {
-        var stored = localStorage.getItem('client_store_theme');
+        var stored = localStorage.getItem('%VITE_STORE_SLUG%'.replace(/-/g, '_') + '_theme');
         var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (stored === 'dark' || (!stored && prefersDark)) {
           document.documentElement.classList.add('dark');

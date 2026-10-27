@@ -17,7 +17,7 @@ import { useWishlist } from '@/lib/wishlistStore';
 import { cloudinaryImage, productImageSrcSet } from '@/lib/images';
 import { formatMoney, getProductPath } from '@/lib/products';
 import { getColorForImage, getColorImageIndex, getProductImages } from '@/lib/productOptions';
-import { trackProductEvent } from '@/lib/analytics';
+import { trackProductEvent } from '@/lib/storeEvents';
 
 const BADGE_LABELS = {
   best_seller: 'Best seller',
