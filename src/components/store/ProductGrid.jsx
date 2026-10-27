@@ -33,8 +33,8 @@ export default function ProductGrid({
     return (
       <div className={GRID_CLASS}>
         {Array(PAGE_SIZE).fill(0).map((_, i) => (
-          <div key={i} className="animate-pulse overflow-hidden rounded-3xl border border-border/70 bg-card p-1.5">
-            <div className="aspect-square rounded-[18px] bg-secondary/80" />
+          <div key={i} className="animate-pulse overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="aspect-square bg-surface" />
             <div className="p-3 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="h-2.5 bg-secondary rounded w-1/3" />
@@ -56,7 +56,7 @@ export default function ProductGrid({
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-card px-4 py-16 text-center text-muted-foreground">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface px-4 py-16 text-center text-muted-foreground">
         <PackageOpen className="w-14 h-14 mb-4 opacity-25" />
         <p className="text-base font-semibold text-foreground">Aucun produit trouvé</p>
         <p className="text-sm mt-1 mb-6">Essayez une autre recherche, catégorie ou fourchette de prix.</p>

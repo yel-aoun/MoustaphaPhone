@@ -9,19 +9,16 @@ const BADGES = [
 
 export default function TrustBadges() {
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-10">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="border-y border-border bg-surface">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-6 px-4 py-8 sm:px-6 lg:grid-cols-4 lg:px-10">
         {BADGES.map(({ icon: Icon, label, sub }) => (
-          <div
-            key={label}
-            className="group flex flex-col gap-4 rounded-3xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground text-background transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-              <Icon className="h-5 w-5" strokeWidth={1.75} />
+          <div key={label} className="flex items-center gap-3 px-2">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Icon className="h-6 w-6" strokeWidth={1.75} />
             </span>
             <div>
-              <p className="text-sm font-semibold leading-tight text-foreground">{label}</p>
-              <p className="mt-1 text-xs leading-snug text-muted-foreground">{sub}</p>
+              <p className="text-sm font-extrabold leading-tight text-foreground">{label}</p>
+              <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{sub}</p>
             </div>
           </div>
         ))}

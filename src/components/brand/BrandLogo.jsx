@@ -48,7 +48,7 @@ export default function BrandLogo({
 
       {showText && (
         <span className="min-w-0 leading-none">
-          <span className={`${cfg.name} block whitespace-nowrap font-semibold tracking-tight ${dark ? 'text-white' : 'text-foreground'}`}>
+          <span className={`${cfg.name} block whitespace-nowrap font-extrabold tracking-tight ${dark ? 'text-white' : 'text-foreground'}`}>
             {leadingText}<span className="text-primary">{accentText}</span>
           </span>
           {subtitle && (

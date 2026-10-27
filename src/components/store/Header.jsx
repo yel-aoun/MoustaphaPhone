@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ShoppingCart, Search, X, Truck, RotateCcw, Shield, Heart,
-  Sun, Moon, ChevronDown, ChevronRight, LayoutGrid, Package, Menu,
+  Sun, Moon, ChevronDown, ChevronRight, LayoutGrid, Package, Menu, Phone,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { ICON_COMPONENTS } from '@/lib/categoryIcons';
 import BrandLogo from '@/components/brand/BrandLogo';
 import { cloudinaryImage } from '@/lib/images';
 import SearchSuggestions from '@/components/store/SearchSuggestions';
+import { storeBrand } from '@/lib/brand';
 
 const ANNOUNCEMENT_MESSAGES = [
   { icon: Truck,     text: 'Livraison gratuite à partir de 500 MAD' },
@@ -29,6 +30,7 @@ export default function Header({
   products = [],
 }) {
   const [scrolled, setScrolled] = useState(false);
+  const [msgIdx, setMsgIdx] = useState(0);
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
@@ -48,6 +50,11 @@ export default function Header({
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setMsgIdx((i) => (i + 1) % ANNOUNCEMENT_MESSAGES.length), 4500);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -84,6 +91,7 @@ export default function Header({
     }, 150);
   };
 
+  const { icon: MsgIcon, text: msgText } = ANNOUNCEMENT_MESSAGES[msgIdx];
   const selectedLabel =
     !activeCategory || activeCategory === 'Tous' ? 'Toutes les catégories' : activeCategory;
 
@@ -97,197 +105,133 @@ export default function Header({
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="fixed top-0 left-0 right-0 z-50"
+        className={`fixed top-0 left-0 right-0 z-50 bg-background transition-shadow duration-300 ${
+          scrolled ? 'shadow-[0_6px_24px_-12px_rgba(20,20,40,0.25)]' : ''
+        }`}
       >
-        {/* Announcement ticker */}
-        <div className="overflow-hidden bg-foreground text-background">
-          <div className="flex w-max animate-marquee py-1.5 hover:[animation-play-state:paused]">
-            {[0, 1].map((copy) => (
-              <div key={copy} className="flex shrink-0 items-center" aria-hidden={copy === 1}>
-                {[...ANNOUNCEMENT_MESSAGES, ...ANNOUNCEMENT_MESSAGES].map(({ icon: Icon, text }, i) => (
-                  <span
-                    key={`${copy}-${i}`}
-                    className="flex items-center gap-2 px-6 font-mono text-[10.5px] font-medium uppercase tracking-[0.14em]"
-                  >
-                    <Icon className="h-3 w-3 shrink-0 text-neon" />
-                    {text}
-                    <span className="ml-6 h-1 w-1 rounded-full bg-background/30" />
-                  </span>
-                ))}
-              </div>
-            ))}
+        {/* Info bar */}
+        <div className="bg-primary text-primary-foreground">
+          <div className="mx-auto flex h-8 max-w-7xl items-center justify-center px-4 text-[11.5px] font-semibold sm:justify-between sm:px-6 lg:px-10">
+            <span className="hidden items-center gap-1.5 sm:flex">
+              <Phone className="h-3.5 w-3.5" />
+              {storeBrand.whatsappDisplay} · {storeBrand.supportHours}
+            </span>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={msgIdx}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center gap-1.5"
+              >
+                <MsgIcon className="h-3.5 w-3.5 shrink-0" />
+                {msgText}
+              </motion.span>
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* Floating capsule */}
-        <div className="px-2.5 pt-2 sm:px-4 sm:pt-3">
-          <div
-            className={`glass relative mx-auto max-w-7xl rounded-[22px] transition-shadow duration-300 ${
-              scrolled ? 'shadow-[0_18px_50px_-20px_rgba(10,10,30,0.35)]' : ''
-            }`}
-          >
-            <div className="px-2.5 sm:px-5">
-              <div className="flex h-14 items-center justify-between gap-1.5 sm:h-16 sm:gap-3">
+        {/* Main row */}
+        <div className="border-b border-border">
+          <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-10">
+            <div className="flex h-16 items-center justify-between gap-2 sm:h-[72px] sm:gap-6">
 
-                {/* Hamburger — mobile only */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 rounded-full sm:hidden"
-                  onClick={() => setMobileMenuOpen(true)}
-                  aria-label="Menu catégories"
-                >
-                  <Menu className="w-5 h-5" />
-                </Button>
+              {/* Hamburger — mobile only */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 sm:hidden"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Menu catégories"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
 
-                {/* Logo */}
-                <a href="/" className="flex min-w-0 items-center gap-2">
-                  <BrandLogo size="sm" />
-                </a>
+              {/* Logo */}
+              <a href="/" className="flex min-w-0 items-center gap-2">
+                <BrandLogo size="sm" />
+              </a>
 
-                {/* Search bar — desktop */}
-                <div className="hidden h-10 max-w-xl flex-1 items-stretch overflow-visible rounded-full border border-foreground/[0.06] bg-secondary/70 transition-colors focus-within:border-primary/40 focus-within:bg-background sm:flex">
-                  {/* Category dropdown trigger */}
-                  <div ref={catDropdownRef} className="relative shrink-0">
-                    <button
-                      onClick={() => setCatDropdownOpen((v) => !v)}
-                      className="flex h-full items-center gap-1.5 whitespace-nowrap rounded-l-full border-r border-foreground/[0.06] pl-4 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/[0.04]"
-                    >
-                      <span className="max-w-[120px] truncate text-xs">{selectedLabel}</span>
-                      <ChevronDown
-                        className={`w-3 h-3 text-muted-foreground transition-transform duration-150 ${
-                          catDropdownOpen ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-
-                    <AnimatePresence>
-                      {catDropdownOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.12 }}
-                          className="absolute left-0 top-[calc(100%+8px)] z-[60] min-w-[220px] overflow-hidden rounded-2xl border border-border bg-popover p-1.5 shadow-2xl"
-                        >
-                          <button
-                            onClick={() => { onCategorySelect?.('Tous'); setCatDropdownOpen(false); }}
-                            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                              activeCategory === 'Tous' || !activeCategory
-                                ? 'bg-primary/10 font-medium text-primary'
-                                : 'text-foreground hover:bg-secondary'
-                            }`}
-                          >
-                            <LayoutGrid className="w-4 h-4 shrink-0" />
-                            Toutes les catégories
-                          </button>
-                          {categories.length > 0 && <div className="mx-2 my-1 border-t border-border" />}
-                          {categories.map(({ name, icon }) => {
-                            const Icon = icon ? ICON_COMPONENTS[icon] : null;
-                            const isActive = activeCategory === name;
-                            return (
-                              <button
-                                key={name}
-                                onClick={() => { onCategorySelect?.(name); setCatDropdownOpen(false); }}
-                                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                                  isActive
-                                    ? 'bg-primary/10 font-medium text-primary'
-                                    : 'text-foreground hover:bg-secondary'
-                                }`}
-                              >
-                                {Icon && <Icon className="w-4 h-4 shrink-0 text-primary/70" />}
-                                {!Icon && <Package className="w-4 h-4 shrink-0 text-muted-foreground" />}
-                                {name}
-                              </button>
-                            );
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Search input */}
-                  <div className="relative flex-1 min-w-0">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-                    <Input
-                      ref={desktopSearchRef}
-                      placeholder="Rechercher un produit..."
-                      value={searchQuery}
-                      onChange={(e) => onSearchChange(e.target.value)}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
-                      className="h-full rounded-r-full border-0 bg-transparent pl-9 pr-9 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => onSearchChange('')}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2"
-                      >
-                        <X className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
-                    )}
-                    {searchFocused && (
-                      <SearchSuggestions
-                        query={searchQuery}
-                        products={products}
-                        onCategorySelect={(category) => {
-                          onCategorySelect?.(category);
-                          onSearchChange('');
-                        }}
-                        onSelect={() => setSearchFocused(false)}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Right icons */}
-                <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleTheme} aria-label="Changer le thème">
-                    {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  </Button>
-
-                  <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full" onClick={onWishlistOpen} aria-label="Mes favoris">
-                    <Heart className={`w-4 h-4 transition-colors ${totalWishlist > 0 ? 'fill-red-500 text-red-500' : ''}`} />
-                    {totalWishlist > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
-                        {totalWishlist}
-                      </span>
-                    )}
-                  </Button>
-
+              {/* Search bar — desktop */}
+              <div className="hidden h-11 max-w-2xl flex-1 items-stretch rounded-xl border-2 border-primary bg-background sm:flex">
+                {/* Category dropdown trigger */}
+                <div ref={catDropdownRef} className="relative shrink-0">
                   <button
-                    type="button"
-                    onClick={onCartOpen}
-                    aria-label="Panier"
-                    className="relative flex h-9 items-center gap-1.5 rounded-full bg-foreground px-2.5 text-background transition-transform hover:scale-[1.03] active:scale-95 sm:px-3.5"
+                    onClick={() => setCatDropdownOpen((v) => !v)}
+                    className="flex h-full items-center gap-1.5 whitespace-nowrap rounded-l-[10px] border-r border-border bg-surface px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span className="hidden text-xs font-semibold sm:inline">Panier</span>
-                    {totalItems > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-neon px-1 font-mono text-[10px] font-bold text-neon-foreground">
-                        {totalItems}
-                      </span>
-                    )}
+                    <span className="max-w-[120px] truncate text-xs">{selectedLabel}</span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-150 ${
+                        catDropdownOpen ? 'rotate-180' : ''
+                      }`}
+                    />
                   </button>
-                </div>
-              </div>
 
-              {/* Mobile search */}
-              <div className="sm:hidden pb-2.5">
-                <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <AnimatePresence>
+                    {catDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.12 }}
+                        className="absolute left-0 top-[calc(100%+6px)] z-[60] min-w-[220px] overflow-hidden rounded-xl border border-border bg-popover py-1 shadow-xl"
+                      >
+                        <button
+                          onClick={() => { onCategorySelect?.('Tous'); setCatDropdownOpen(false); }}
+                          className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+                            activeCategory === 'Tous' || !activeCategory
+                              ? 'bg-primary/5 font-semibold text-primary'
+                              : 'text-foreground hover:bg-surface'
+                          }`}
+                        >
+                          <LayoutGrid className="w-4 h-4 shrink-0" />
+                          Toutes les catégories
+                        </button>
+                        {categories.length > 0 && <div className="my-1 border-t border-border" />}
+                        {categories.map(({ name, icon }) => {
+                          const Icon = icon ? ICON_COMPONENTS[icon] : null;
+                          const isActive = activeCategory === name;
+                          return (
+                            <button
+                              key={name}
+                              onClick={() => { onCategorySelect?.(name); setCatDropdownOpen(false); }}
+                              className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+                                isActive
+                                  ? 'bg-primary/5 font-semibold text-primary'
+                                  : 'text-foreground hover:bg-surface'
+                              }`}
+                            >
+                              {Icon && <Icon className="w-4 h-4 shrink-0 text-primary" />}
+                              {!Icon && <Package className="w-4 h-4 shrink-0 text-muted-foreground" />}
+                              {name}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Search input */}
+                <div className="relative flex-1 min-w-0">
                   <Input
-                    ref={mobileSearchRef}
-                    placeholder="Rechercher..."
+                    ref={desktopSearchRef}
+                    placeholder="iPhone, coque, chargeur, écouteurs..."
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
                     onFocus={() => setSearchFocused(true)}
                     onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
-                    className="h-9 rounded-full border-0 bg-secondary/80 pl-9 pr-9 text-sm"
+                    className="h-full rounded-none border-0 bg-transparent pl-4 pr-9 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                   {searchQuery && (
-                    <button onClick={() => onSearchChange('')} className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                      <X className="w-3.5 h-3.5 text-muted-foreground" />
+                    <button
+                      onClick={() => onSearchChange('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      aria-label="Effacer la recherche"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground" />
                     </button>
                   )}
                   {searchFocused && (
@@ -302,175 +246,254 @@ export default function Header({
                     />
                   )}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('catalogue')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="m-1 flex items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  <Search className="h-4 w-4" />
+                  <span className="hidden lg:inline">Rechercher</span>
+                </button>
+              </div>
+
+              {/* Right actions */}
+              <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+                <Button variant="ghost" size="icon" className="h-10 w-10" onClick={toggleTheme} aria-label="Changer le thème">
+                  {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={onWishlistOpen}
+                  aria-label="Mes favoris"
+                  className="relative flex h-10 w-10 flex-col items-center justify-center rounded-lg text-foreground transition-colors hover:bg-surface sm:h-12 sm:w-14"
+                >
+                  <Heart className={`h-5 w-5 ${totalWishlist > 0 ? 'fill-primary text-primary' : ''}`} />
+                  <span className="hidden text-[10.5px] font-semibold sm:block">Favoris</span>
+                  {totalWishlist > 0 && (
+                    <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground sm:right-2">
+                      {totalWishlist}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onCartOpen}
+                  aria-label="Panier"
+                  className="relative flex h-10 w-10 flex-col items-center justify-center rounded-lg text-foreground transition-colors hover:bg-surface sm:h-12 sm:w-14"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  <span className="hidden text-[10.5px] font-semibold sm:block">Panier</span>
+                  {totalItems > 0 && (
+                    <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-deal px-1 text-[9px] font-extrabold text-deal-foreground sm:right-2">
+                      {totalItems}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* ── Category nav row + mega menu (desktop only) ── */}
-            <div
-              ref={megaAreaRef}
-              className="hidden border-t border-foreground/[0.06] sm:block"
-              onMouseLeave={closeMega}
-            >
-              <div className="no-scrollbar flex h-11 items-center gap-1 overflow-x-auto px-3 sm:px-4">
-
-                {/* "Toutes les catégories" trigger */}
-                <div
-                  className="shrink-0"
-                  onMouseEnter={() => {
-                    openMega();
-                    setMegaHovered((prev) => prev || (categories[0]?.name ?? null));
-                  }}
-                >
-                  <button
-                    onClick={() => { onCategorySelect?.('Tous'); setMegaOpen(false); }}
-                    className={`flex h-8 items-center gap-2 rounded-full px-3.5 text-xs font-semibold transition-colors ${
-                      megaOpen ? 'bg-primary text-primary-foreground' : 'bg-foreground text-background'
-                    }`}
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
-                    <span className="hidden md:inline">Toutes les catégories</span>
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${megaOpen ? 'rotate-180' : ''}`}
-                    />
+            {/* Mobile search */}
+            <div className="sm:hidden pb-3">
+              <div className="relative flex h-10 items-stretch rounded-xl border-2 border-primary bg-background">
+                <Input
+                  ref={mobileSearchRef}
+                  placeholder="Rechercher un téléphone, une coque..."
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
+                  className="h-full flex-1 rounded-none border-0 bg-transparent pl-3 pr-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+                {searchQuery && (
+                  <button onClick={() => onSearchChange('')} className="absolute right-12 top-1/2 -translate-y-1/2" aria-label="Effacer la recherche">
+                    <X className="w-4 h-4 text-muted-foreground" />
                   </button>
-                </div>
-
-                <div className="mx-1 h-4 w-px shrink-0 bg-border" />
-
-                {/* Individual category tabs */}
-                {categories.map(({ name, icon }) => {
-                  const Icon = icon ? ICON_COMPONENTS[icon] : null;
-                  const isActive = activeCategory === name;
-                  const isHighlighted = megaOpen && megaHovered === name;
-                  return (
-                    <button
-                      key={name}
-                      onClick={() => { onCategorySelect?.(name); setMegaOpen(false); setMegaHovered(null); }}
-                      onMouseEnter={() => { openMega(); setMegaHovered(name); }}
-                      className={`flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors ${
-                        isHighlighted || isActive
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground'
-                      }`}
-                    >
-                      {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
-                      <span>{name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Mega menu panel */}
-              <AnimatePresence>
-                {megaOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.18 }}
-                    onMouseEnter={openMega}
-                    className="absolute left-0 right-0 top-full z-[60] pt-2"
-                  >
-                    <div className="flex overflow-hidden rounded-[22px] border border-border bg-popover shadow-2xl" style={{ minHeight: 280 }}>
-
-                      {/* Left column — category list */}
-                      <div className="w-60 shrink-0 overflow-y-auto border-r border-border p-2">
-                        {categories.map(({ name, icon }) => {
-                          const Icon = icon ? ICON_COMPONENTS[icon] : null;
-                          const isHov = megaHovered === name;
-                          return (
-                            <button
-                              key={name}
-                              onMouseEnter={() => setMegaHovered(name)}
-                              onClick={() => { onCategorySelect?.(name); setMegaOpen(false); setMegaHovered(null); }}
-                              className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                                isHov
-                                  ? 'bg-primary/10 font-medium text-primary'
-                                  : 'text-foreground hover:bg-secondary'
-                              }`}
-                            >
-                              <span className="flex items-center gap-2.5">
-                                {Icon
-                                  ? <Icon className={`w-4 h-4 shrink-0 ${isHov ? 'text-primary' : 'text-muted-foreground'}`} />
-                                  : <Package className="w-4 h-4 shrink-0 text-muted-foreground" />
-                                }
-                                {name}
-                              </span>
-                              <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-opacity ${isHov ? 'opacity-100 text-primary' : 'opacity-0'}`} />
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Right panel — products of hovered category */}
-                      <div className="flex-1 p-5">
-                        <AnimatePresence mode="wait">
-                          {megaHovered && (
-                            <motion.div
-                              key={megaHovered}
-                              initial={{ opacity: 0, x: 10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              exit={{ opacity: 0, x: -10 }}
-                              transition={{ duration: 0.15 }}
-                            >
-                              <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-foreground">
-                                {(() => {
-                                  const cat = categories.find((c) => c.name === megaHovered);
-                                  const Icon = cat?.icon ? ICON_COMPONENTS[cat.icon] : null;
-                                  return Icon ? <Icon className="w-4 h-4 text-primary" /> : null;
-                                })()}
-                                {megaHovered}
-                                <span className="ml-1 font-mono text-[11px] font-normal text-muted-foreground">
-                                  {megaProducts.length} produit{megaProducts.length !== 1 ? 's' : ''}
-                                </span>
-                              </h3>
-
-                              {megaProducts.length > 0 ? (
-                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                                  {megaProducts.map((product) => (
-                                    <button
-                                      key={product.id}
-                                      onClick={() => { onCategorySelect?.(megaHovered); setMegaOpen(false); }}
-                                      className="group flex items-center gap-3 rounded-2xl border border-transparent p-2 text-left transition-all hover:border-border hover:bg-secondary/60"
-                                    >
-                                      {product.image_url ? (
-                                        <img
-                                          src={cloudinaryImage(product.image_url, { width: 120, height: 120, crop: 'fill' })}
-                                          alt={product.name}
-                                          className="h-14 w-14 shrink-0 rounded-xl bg-white object-cover"
-                                        />
-                                      ) : (
-                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-secondary">
-                                          <Package className="w-5 h-5 text-muted-foreground" />
-                                        </div>
-                                      )}
-                                      <div className="min-w-0">
-                                        <p className="truncate text-xs font-medium leading-snug text-foreground transition-colors group-hover:text-primary">
-                                          {product.name}
-                                        </p>
-                                        <p className="mt-0.5 font-mono text-xs font-semibold text-foreground/80">
-                                          {product.price?.toLocaleString('fr-MA')} MAD
-                                        </p>
-                                      </div>
-                                    </button>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="flex flex-col items-center justify-center h-32 text-muted-foreground gap-2">
-                                  <Package className="w-8 h-8 opacity-30" />
-                                  <p className="text-sm">Aucun produit dans cette catégorie</p>
-                                </div>
-                              )}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </motion.div>
                 )}
-              </AnimatePresence>
+                <span className="m-0.5 flex w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Search className="h-4 w-4" />
+                </span>
+                {searchFocused && (
+                  <SearchSuggestions
+                    query={searchQuery}
+                    products={products}
+                    onCategorySelect={(category) => {
+                      onCategorySelect?.(category);
+                      onSearchChange('');
+                    }}
+                    onSelect={() => setSearchFocused(false)}
+                  />
+                )}
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* ── Category row + mega menu (desktop only) ── */}
+        <div
+          ref={megaAreaRef}
+          className="relative hidden border-b border-border bg-surface sm:block"
+          onMouseLeave={closeMega}
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+            <div className="no-scrollbar flex h-11 items-stretch gap-1 overflow-x-auto">
+
+              {/* "Tous les rayons" trigger */}
+              <div
+                className="flex shrink-0 items-center"
+                onMouseEnter={() => {
+                  openMega();
+                  setMegaHovered((prev) => prev || (categories[0]?.name ?? null));
+                }}
+              >
+                <button
+                  onClick={() => { onCategorySelect?.('Tous'); setMegaOpen(false); }}
+                  className="flex h-8 items-center gap-2 rounded-lg bg-foreground px-3.5 text-[13px] font-bold text-background transition-colors hover:bg-primary hover:text-primary-foreground"
+                >
+                  <Menu className="w-4 h-4 shrink-0" />
+                  <span className="hidden md:inline">Tous les rayons</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${megaOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+
+              {/* Individual category tabs */}
+              {categories.map(({ name, icon }) => {
+                const Icon = icon ? ICON_COMPONENTS[icon] : null;
+                const isActive = activeCategory === name;
+                const isHighlighted = megaOpen && megaHovered === name;
+                return (
+                  <button
+                    key={name}
+                    onClick={() => { onCategorySelect?.(name); setMegaOpen(false); setMegaHovered(null); }}
+                    onMouseEnter={() => { openMega(); setMegaHovered(name); }}
+                    className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-[3px] px-3 text-[13px] font-semibold transition-colors ${
+                      isHighlighted || isActive
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-foreground/75 hover:text-primary'
+                    }`}
+                  >
+                    {Icon && <Icon className="w-4 h-4 shrink-0" />}
+                    <span>{name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mega menu panel */}
+          <AnimatePresence>
+            {megaOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.16 }}
+                onMouseEnter={openMega}
+                className="absolute left-0 right-0 top-full z-[60] border-b border-border bg-popover shadow-2xl"
+              >
+                <div className="mx-auto flex max-w-7xl" style={{ minHeight: 280 }}>
+
+                  {/* Left column — category list */}
+                  <div className="w-60 shrink-0 overflow-y-auto border-r border-border bg-surface py-2">
+                    {categories.map(({ name, icon }) => {
+                      const Icon = icon ? ICON_COMPONENTS[icon] : null;
+                      const isHov = megaHovered === name;
+                      return (
+                        <button
+                          key={name}
+                          onMouseEnter={() => setMegaHovered(name)}
+                          onClick={() => { onCategorySelect?.(name); setMegaOpen(false); setMegaHovered(null); }}
+                          className={`flex w-full items-center justify-between gap-2 px-5 py-2.5 text-sm transition-colors ${
+                            isHov
+                              ? 'bg-background font-bold text-primary'
+                              : 'text-foreground hover:bg-background'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2.5">
+                            {Icon
+                              ? <Icon className={`w-4 h-4 shrink-0 ${isHov ? 'text-primary' : 'text-muted-foreground'}`} />
+                              : <Package className="w-4 h-4 shrink-0 text-muted-foreground" />
+                            }
+                            {name}
+                          </span>
+                          <ChevronRight className={`w-4 h-4 shrink-0 transition-opacity ${isHov ? 'opacity-100 text-primary' : 'opacity-0'}`} />
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Right panel — products of hovered category */}
+                  <div className="flex-1 p-6">
+                    <AnimatePresence mode="wait">
+                      {megaHovered && (
+                        <motion.div
+                          key={megaHovered}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-base font-extrabold text-foreground">
+                              {megaHovered}
+                              <span className="ml-2 text-xs font-medium text-muted-foreground">
+                                {megaProducts.length} produit{megaProducts.length !== 1 ? 's' : ''}
+                              </span>
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => { onCategorySelect?.(megaHovered); setMegaOpen(false); }}
+                              className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                            >
+                              Voir tout <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+
+                          {megaProducts.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                              {megaProducts.map((product) => (
+                                <button
+                                  key={product.id}
+                                  onClick={() => { onCategorySelect?.(megaHovered); setMegaOpen(false); }}
+                                  className="group flex flex-col items-center gap-2 rounded-xl border border-border p-3 text-center transition-all hover:border-primary/40 hover:shadow-soft"
+                                >
+                                  {product.image_url ? (
+                                    <img
+                                      src={cloudinaryImage(product.image_url, { width: 160, height: 160, crop: 'pad' })}
+                                      alt={product.name}
+                                      className="h-20 w-20 bg-white object-contain"
+                                    />
+                                  ) : (
+                                    <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-surface">
+                                      <Package className="w-6 h-6 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <p className="line-clamp-2 text-xs font-semibold leading-snug text-foreground group-hover:text-primary">
+                                    {product.name}
+                                  </p>
+                                  <p className="text-sm font-extrabold text-primary">
+                                    {product.price?.toLocaleString('fr-MA')} DH
+                                  </p>
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-32 text-muted-foreground gap-2">
+                              <Package className="w-8 h-8 opacity-30" />
+                              <p className="text-sm">Aucun produit dans cette catégorie</p>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.header>
 
@@ -484,7 +507,7 @@ export default function Header({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm"
+                className="fixed inset-0 z-[200] bg-black/45"
                 onClick={() => setMobileMenuOpen(false)}
               />
               <motion.div
@@ -492,16 +515,16 @@ export default function Header({
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-                className="fixed bottom-2 left-2 top-2 z-[201] flex w-72 flex-col overflow-hidden rounded-[22px] border border-border bg-background shadow-2xl"
+                className="fixed top-0 left-0 bottom-0 z-[201] flex w-[78vw] max-w-xs flex-col bg-background shadow-2xl"
               >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+                <div className="flex shrink-0 items-center justify-between bg-primary px-4 py-3.5 text-primary-foreground">
                   <div className="flex items-center gap-2">
-                    <LayoutGrid className="w-4 h-4 text-primary" />
-                    <span className="font-semibold text-foreground text-sm">Catégories</span>
+                    <LayoutGrid className="w-4 h-4" />
+                    <span className="text-sm font-bold">Tous les rayons</span>
                   </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-white/15"
                     aria-label="Fermer"
                   >
                     <X className="w-4 h-4" />

@@ -64,8 +64,8 @@ export default function ProductCard({ product, onAddToCart, onQuickView, imagePr
   };
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/70 bg-card p-1.5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-[0_24px_50px_-24px_hsl(var(--primary)/0.35)]">
-      {/* Image well */}
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:border-primary/40 hover:shadow-soft">
+      {/* Image */}
       <div
         role="button"
         tabIndex={0}
@@ -76,7 +76,7 @@ export default function ProductCard({ product, onAddToCart, onQuickView, imagePr
             onQuickView?.(product);
           }
         }}
-        className="relative aspect-square cursor-zoom-in overflow-hidden rounded-[18px] bg-secondary/70 text-left dark:bg-[hsl(240_6%_88%)] focus:outline-none focus:ring-2 focus:ring-primary/40"
+        className="relative aspect-square cursor-zoom-in overflow-hidden bg-white text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
         aria-label={`Aperçu rapide de ${product.name}`}
       >
         {hasImage ? (
@@ -88,27 +88,29 @@ export default function ProductCard({ product, onAddToCart, onQuickView, imagePr
             loading={imagePriority ? 'eager' : 'lazy'}
             decoding="async"
             fetchPriority={imagePriority ? 'high' : 'low'}
-            className={`h-full w-full bg-transparent object-contain p-4 mix-blend-multiply transition-transform duration-500 group-hover:scale-[1.06] ${
-              isOutOfStock ? 'opacity-50 grayscale' : ''
+            className={`h-full w-full bg-white object-contain p-4 transition-transform duration-300 group-hover:scale-[1.04] ${
+              isOutOfStock ? 'opacity-50' : ''
             }`}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground dark:text-zinc-500">
+          <div className="flex h-full w-full items-center justify-center bg-surface text-muted-foreground">
             <Package className="h-10 w-10 opacity-35" />
           </div>
         )}
 
-        {/* Top-left badges */}
-        <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
-          {discount !== null && !isOutOfStock && (
-            <span className="rounded-full bg-neon px-2 py-0.5 font-mono text-[10px] font-bold text-neon-foreground">
-              -{discount}%
-            </span>
-          )}
+        {/* Discount sticker */}
+        {discount !== null && !isOutOfStock && (
+          <span className="absolute left-0 top-3 z-10 rounded-r-lg bg-deal px-2.5 py-1 text-xs font-extrabold text-deal-foreground shadow-sm">
+            -{discount}%
+          </span>
+        )}
+
+        {/* Badges */}
+        <div className="absolute bottom-2 left-2 z-10 flex flex-wrap gap-1">
           {visibleBadges.map((badge) => (
             <span
               key={badge}
-              className={`rounded-full px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider ${
+              className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
                 badge === 'limited_stock'
                   ? 'bg-orange-500 text-white'
                   : badge === 'best_seller'
@@ -120,127 +122,87 @@ export default function ProductCard({ product, onAddToCart, onQuickView, imagePr
             </span>
           ))}
           {isOutOfStock && (
-            <span className="rounded-full bg-foreground/80 px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-background">
-              Rupture
+            <span className="rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-bold text-background">
+              Rupture de stock
             </span>
           )}
         </div>
 
-        {/* Top-right actions */}
-        <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5">
-          <button
-            onClick={handleWishlist}
-            type="button"
-            aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-            className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${
-              isWishlisted
-                ? 'bg-red-500 text-white'
-                : 'bg-background/80 text-muted-foreground backdrop-blur hover:text-red-500 sm:translate-x-1 sm:opacity-0 sm:group-hover:translate-x-0 sm:group-hover:opacity-100'
-            }`}
-          >
-            <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-current' : ''}`} />
-          </button>
-          <button
-            onClick={handleCompare}
-            type="button"
-            aria-pressed={isCompared}
-            aria-label={isCompared ? 'Retirer de la comparaison' : 'Comparer'}
-            className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${
-              isCompared
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-background/80 text-muted-foreground backdrop-blur hover:text-primary sm:translate-x-1 sm:opacity-0 sm:delay-75 sm:group-hover:translate-x-0 sm:group-hover:opacity-100'
-            }`}
-          >
-            <Scale className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {/* Wishlist */}
+        <button
+          onClick={handleWishlist}
+          type="button"
+          aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          className={`absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-150 active:scale-90 ${
+            isWishlisted
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-border bg-white text-zinc-500 hover:border-primary hover:text-primary'
+          }`}
+        >
+          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+        </button>
+      </div>
 
-        {/* Colour swatches */}
+      {/* Info */}
+      <div className="flex flex-1 flex-col gap-1.5 border-t border-border p-3">
+        {product.category && (
+          <p className="truncate text-[11px] font-semibold text-muted-foreground">{product.category}</p>
+        )}
+        <Link
+          to={getProductPath(product)}
+          onClick={(e) => e.stopPropagation()}
+          className="min-h-[2.5rem] text-sm font-semibold leading-snug text-foreground line-clamp-2 hover:text-primary"
+        >
+          {product.name}
+        </Link>
+
         {colors.length > 0 && (
-          <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1 rounded-full bg-background/80 px-1.5 py-1 backdrop-blur">
+          <div className="flex items-center gap-1.5">
             {colors.slice(0, 5).map((c) => (
               <span
                 key={c.name}
                 title={c.name}
-                className="h-3 w-3 shrink-0 rounded-full ring-1 ring-foreground/15"
+                className="h-3.5 w-3.5 shrink-0 rounded-full border border-border"
                 style={{ backgroundColor: c.hex }}
               />
             ))}
             {colors.length > 5 && (
-              <span className="pl-0.5 font-mono text-[9px] text-muted-foreground">+{colors.length - 5}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">+{colors.length - 5}</span>
             )}
           </div>
         )}
-      </div>
 
-      {/* Info */}
-      <div className="flex flex-1 flex-col gap-2 px-2 pb-1.5 pt-3">
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-2">
-            {product.category && (
-              <p className="truncate font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                {product.category}
-              </p>
-            )}
-            <span
-              className={`inline-flex shrink-0 items-center gap-1 text-[10px] font-medium ${
-                isOutOfStock ? 'text-orange-500' : 'text-emerald-600 dark:text-emerald-400'
-              }`}
-            >
-              <Circle className={`h-1.5 w-1.5 fill-current ${isOutOfStock ? '' : 'animate-pulse'}`} />
-              {stockLabel}
+        <div className="mt-auto pt-1">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <span className="text-lg font-extrabold leading-tight text-primary">
+              {product.price?.toLocaleString('fr-MA')} <span className="text-xs font-bold">DH</span>
             </span>
-          </div>
-          <Link
-            to={getProductPath(product)}
-            onClick={(e) => e.stopPropagation()}
-            className="block min-h-[2.5rem] text-sm font-medium leading-snug text-foreground line-clamp-2 transition-colors hover:text-primary"
-          >
-            {product.name}
-          </Link>
-        </div>
-
-        <div className="mt-auto flex items-end justify-between gap-2 pt-1">
-          {/* Price */}
-          <div className="min-w-0">
             {product.original_price && product.original_price > product.price && (
-              <span className="block font-mono text-[11px] text-muted-foreground line-through">
-                {product.original_price?.toLocaleString('fr-MA')}
+              <span className="text-xs font-medium text-muted-foreground line-through">
+                {product.original_price?.toLocaleString('fr-MA')} DH
               </span>
             )}
-            <div className="flex items-baseline gap-1">
-              <span className="font-mono text-lg font-semibold leading-none tracking-tight text-foreground">
-                {product.price?.toLocaleString('fr-MA')}
-              </span>
-              <span className="text-[10px] font-semibold text-muted-foreground">MAD</span>
-            </div>
           </div>
-
-          {/* Details link (desktop) */}
-          <Link
-            to={getProductPath(product)}
-            aria-label={`Voir les détails de ${product.name}`}
-            className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary sm:flex"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Link>
+          <p className={`mt-0.5 flex items-center gap-1 text-[11px] font-semibold ${isOutOfStock ? 'text-orange-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            <Circle className="h-1.5 w-1.5 fill-current" />
+            {isOutOfStock ? 'Rupture de stock' : 'En stock · Livraison rapide'}
+          </p>
         </div>
 
         {/* CTA */}
-        <div onClick={(e) => e.stopPropagation()}>
+        <div onClick={(e) => e.stopPropagation()} className="mt-1.5 flex gap-1.5">
           <Button
             onClick={handleAdd}
             disabled={isOutOfStock}
             size="sm"
-            className={`h-9 w-full rounded-full text-xs font-semibold transition-all duration-200 ${
+            className={`h-9 flex-1 rounded-lg text-xs font-bold transition-all duration-200 ${
               isOutOfStock
                 ? 'bg-muted text-muted-foreground cursor-not-allowed'
                 : added
-                ? 'bg-neon text-neon-foreground hover:bg-neon'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-600'
                 : inCart
-                ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400'
-                : 'bg-foreground text-background hover:bg-primary hover:text-primary-foreground'
+                ? 'border border-emerald-600/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
             }`}
             aria-label={isOutOfStock ? 'Produit indisponible' : `Ajouter ${product.name} au panier`}
           >
@@ -249,11 +211,34 @@ export default function ProductCard({ product, onAddToCart, onQuickView, imagePr
             ) : added ? (
               <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Ajouté !</span>
             ) : inCart ? (
-              <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Dans le panier ({cartItem.quantity})</span>
+              <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Panier ({cartItem.quantity})</span>
             ) : (
-              <span className="flex items-center gap-1"><ShoppingCart className="w-3.5 h-3.5" /> Ajouter au panier</span>
+              <span className="flex items-center gap-1"><ShoppingCart className="w-3.5 h-3.5" /> Ajouter</span>
             )}
           </Button>
+          <button
+            type="button"
+            onClick={handleCompare}
+            aria-pressed={isCompared}
+            aria-label={isCompared ? 'Retirer de la comparaison' : 'Comparer'}
+            title="Comparer"
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+              isCompared
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border text-muted-foreground hover:border-primary hover:text-primary'
+            }`}
+          >
+            <Scale className="h-4 w-4" />
+          </button>
+          <Link
+            to={getProductPath(product)}
+            aria-label={`Voir les détails de ${product.name}`}
+            title="Détails"
+            className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary sm:flex"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </div>

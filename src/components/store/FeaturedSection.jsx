@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import ProductCard from './ProductCard';
 
-export default function FeaturedSection({ title, subtitle, products, onAddToCart, onQuickView, onViewAll }) {
+export default function FeaturedSection({ title, subtitle, products, onAddToCart, onQuickView, onViewAll, highlight = false }) {
   const scrollRef = useRef(null);
 
   const scroll = (dir) => {
@@ -13,38 +13,45 @@ export default function FeaturedSection({ title, subtitle, products, onAddToCart
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="mb-14">
+    <section className={`mb-10 ${highlight ? '-mx-4 bg-primary px-4 py-5 sm:mx-0 sm:rounded-2xl sm:px-5' : ''}`}>
       {/* Header row */}
-      <div className="mb-5 flex items-end justify-between gap-3">
+      <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          {subtitle && (
-            <p className="section-eyebrow">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              {subtitle}
-            </p>
+          {highlight ? (
+            <h2 className="text-xl font-extrabold text-primary-foreground sm:text-2xl">{title}</h2>
+          ) : (
+            <h2 className="section-title">{title}</h2>
           )}
-          <h2 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">{title}</h2>
+          {subtitle && (
+            <p className={`mt-1 text-sm ${highlight ? 'text-primary-foreground/80' : 'pl-4 text-muted-foreground'}`}>{subtitle}</p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {onViewAll && (
             <button
               onClick={onViewAll}
-              className="mr-1 flex h-9 items-center gap-1 rounded-full border border-border bg-card px-3.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              className={`mr-1 flex items-center gap-1 text-sm font-bold hover:underline underline-offset-4 ${
+                highlight ? 'text-primary-foreground' : 'text-primary'
+              }`}
             >
               Voir tout
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           )}
           <button
             onClick={() => scroll(-1)}
-            className="hidden h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary sm:flex"
+            className={`hidden h-9 w-9 items-center justify-center rounded-lg border transition-colors sm:flex ${
+              highlight ? 'border-white/30 text-primary-foreground hover:bg-white/15' : 'border-border bg-card hover:border-primary hover:text-primary'
+            }`}
             aria-label="Faire defiler vers la gauche"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => scroll(1)}
-            className="hidden h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary sm:flex"
+            className={`hidden h-9 w-9 items-center justify-center rounded-lg border transition-colors sm:flex ${
+              highlight ? 'border-white/30 text-primary-foreground hover:bg-white/15' : 'border-border bg-card hover:border-primary hover:text-primary'
+            }`}
             aria-label="Faire defiler vers la droite"
           >
             <ChevronRight className="w-4 h-4" />
@@ -53,23 +60,19 @@ export default function FeaturedSection({ title, subtitle, products, onAddToCart
       </div>
 
       {/* Horizontal scroll row */}
-      <div className="relative">
-        <div
-          ref={scrollRef}
-          className="no-scrollbar flex snap-x items-stretch gap-3 overflow-x-auto pb-3 pt-1 sm:gap-4"
-        >
-          {products.map((product) => (
-            <div key={product.id} className="w-48 shrink-0 snap-start sm:w-56 md:w-60">
-              <ProductCard
-                product={product}
-                onAddToCart={onAddToCart}
-                onQuickView={onQuickView}
-              />
-            </div>
-          ))}
-        </div>
-        {/* Right-edge fade hint */}
-        <div className="pointer-events-none absolute top-0 right-0 bottom-3 w-16 bg-gradient-to-l from-background to-transparent" />
+      <div
+        ref={scrollRef}
+        className="no-scrollbar flex snap-x items-stretch gap-3 overflow-x-auto pb-1"
+      >
+        {products.map((product) => (
+          <div key={product.id} className="w-44 shrink-0 snap-start sm:w-52 md:w-56">
+            <ProductCard
+              product={product}
+              onAddToCart={onAddToCart}
+              onQuickView={onQuickView}
+            />
+          </div>
+        ))}
       </div>
     </section>
   );

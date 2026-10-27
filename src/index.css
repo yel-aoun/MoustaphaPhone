@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,80 +11,80 @@ html {
 
 @layer base {
   :root {
-    --background: 240 12% 97%;
-    --foreground: 240 10% 6%;
+    --background: 0 0% 100%;
+    --foreground: 220 25% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 6%;
+    --card-foreground: 220 25% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 6%;
-    --primary: 252 90% 58%;
+    --popover-foreground: 220 25% 12%;
+    --primary: 356 78% 46%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 10% 93%;
-    --secondary-foreground: 240 10% 6%;
-    --muted: 240 8% 92%;
-    --muted-foreground: 240 5% 42%;
-    --accent: 252 90% 58%;
+    --secondary: 30 25% 96%;
+    --secondary-foreground: 220 25% 12%;
+    --muted: 30 18% 94%;
+    --muted-foreground: 220 9% 44%;
+    --accent: 356 78% 46%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 58%;
+    --destructive: 0 84% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 8% 88%;
-    --input: 240 8% 88%;
-    --ring: 252 90% 58%;
-    --neon: 78 100% 58%;
-    --neon-foreground: 240 10% 6%;
-    --glass: 0 0% 100%;
-    --chart-1: 252 90% 58%;
+    --border: 30 14% 89%;
+    --input: 30 14% 89%;
+    --ring: 356 78% 46%;
+    --deal: 44 100% 55%;
+    --deal-foreground: 220 25% 12%;
+    --surface: 30 33% 97%;
+    --chart-1: 356 78% 46%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.875rem;
+    --radius: 0.75rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 252 90% 58%;
+    --sidebar-primary: 356 78% 46%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 30 25% 96%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 252 90% 58%;
+    --sidebar-border: 30 14% 89%;
+    --sidebar-ring: 356 78% 46%;
   }
 
   .dark {
-    --background: 240 12% 4%;
-    --foreground: 240 10% 96%;
-    --card: 240 9% 8%;
-    --card-foreground: 240 10% 96%;
-    --popover: 240 9% 8%;
-    --popover-foreground: 240 10% 96%;
-    --primary: 252 100% 72%;
-    --primary-foreground: 240 12% 4%;
-    --secondary: 240 8% 11%;
-    --secondary-foreground: 240 10% 96%;
-    --muted: 240 8% 13%;
-    --muted-foreground: 240 6% 62%;
-    --accent: 252 100% 72%;
-    --accent-foreground: 240 12% 4%;
+    --background: 222 20% 9%;
+    --foreground: 30 20% 95%;
+    --card: 222 18% 12%;
+    --card-foreground: 30 20% 95%;
+    --popover: 222 18% 12%;
+    --popover-foreground: 30 20% 95%;
+    --primary: 356 85% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 16% 16%;
+    --secondary-foreground: 30 20% 95%;
+    --muted: 222 16% 17%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 356 85% 60%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 7% 16%;
-    --input: 240 7% 16%;
-    --ring: 252 100% 72%;
-    --neon: 78 100% 60%;
-    --neon-foreground: 240 12% 4%;
-    --glass: 240 10% 8%;
-    --chart-1: 252 100% 72%;
+    --border: 222 14% 20%;
+    --input: 222 14% 20%;
+    --ring: 356 85% 60%;
+    --deal: 44 100% 58%;
+    --deal-foreground: 220 25% 10%;
+    --surface: 222 18% 11%;
+    --chart-1: 356 85% 60%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 12% 4%;
-    --sidebar-foreground: 240 10% 96%;
-    --sidebar-primary: 252 100% 72%;
-    --sidebar-primary-foreground: 240 12% 4%;
-    --sidebar-accent: 240 8% 11%;
-    --sidebar-accent-foreground: 240 10% 96%;
-    --sidebar-border: 240 7% 16%;
-    --sidebar-ring: 252 100% 72%;
+    --sidebar-background: 222 20% 9%;
+    --sidebar-foreground: 30 20% 95%;
+    --sidebar-primary: 356 85% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 16% 16%;
+    --sidebar-accent-foreground: 30 20% 95%;
+    --sidebar-border: 222 14% 20%;
+    --sidebar-ring: 356 85% 60%;
   }
 }
 
@@ -94,7 +94,6 @@ html {
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: 'ss01', 'cv11';
   }
 
   h1, h2, h3 {
@@ -111,40 +110,16 @@ html {
 }
 
 @layer components {
-  /* Frosted surface used by the floating nav, overlays and chips */
-  .glass {
-    background-color: hsl(var(--glass) / 0.72);
-    border: 1px solid hsl(var(--foreground) / 0.08);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    backdrop-filter: blur(20px) saturate(180%);
-    box-shadow: 0 1px 0 hsl(0 0% 100% / 0.06) inset, 0 12px 40px -16px hsl(240 30% 10% / 0.25);
+  .section-title {
+    @apply relative pl-4 text-xl font-extrabold text-foreground sm:text-2xl;
+  }
+  .section-title::before {
+    content: '';
+    @apply absolute left-0 top-1/2 h-[70%] w-1.5 -translate-y-1/2 rounded-full bg-primary;
   }
 
-  .glass-dark {
-    background-color: hsl(240 12% 6% / 0.55);
-    border: 1px solid hsl(0 0% 100% / 0.1);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    backdrop-filter: blur(20px) saturate(160%);
-  }
-
-  .text-gradient {
-    background-image: linear-gradient(100deg, hsl(var(--foreground)) 10%, hsl(var(--primary)) 55%, hsl(var(--neon)) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* Hairline grid used as a backdrop in dark showcase sections */
-  .tech-grid {
-    background-image:
-      linear-gradient(hsl(0 0% 100% / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(0 0% 100% / 0.05) 1px, transparent 1px);
-    background-size: 48px 48px;
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 75%);
-  }
-
-  .section-eyebrow {
-    @apply inline-flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground;
+  .shadow-soft {
+    box-shadow: 0 1px 2px hsl(220 25% 12% / 0.04), 0 8px 24px -12px hsl(220 25% 12% / 0.12);
   }
 
   .no-scrollbar {
