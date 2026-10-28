@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Loader2, X, Upload, ImagePlus, Flame, Palette, ListChecks, ArrowLeft, ArrowRight, AlertTriangle, Tag } from 'lucide-react';
+import { suggestColorName } from '@/lib/colorNames';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCategories } from '@/hooks/useCategories';
@@ -192,7 +193,10 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
 
       const [mainImage, ...extraImages] = resolvedUrls;
 
-      const validColors = form.colors.filter((c) => c.name.trim() && c.hex);
+      // A swatch without a name gets one from its shade instead of being dropped
+      const validColors = form.colors
+        .filter((c) => c.hex)
+        .map((c) => ({ ...c, name: c.name.trim() || suggestColorName(c.hex) }));
       const validSpecs = form.specs
         .map((spec) => ({ name: spec.name.trim(), value: spec.value.trim() }))
         .filter((spec) => spec.name && spec.value);
@@ -511,7 +515,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                   <Input
                     value={color.name}
                     onChange={(e) => updateColor(idx, 'name', e.target.value)}
-                    placeholder="Ex : Blanc, Noir, Rouge…"
+                    placeholder={`${suggestColorName(color.hex)} (nom automatique)`}
                     className="flex-1 h-8 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500 text-sm"
                   />
                   {/* Hex display */}
