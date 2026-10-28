@@ -116,7 +116,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">{formatMoney(product.price)}</p>
+            <p className="break-all text-sm font-semibold text-foreground">{formatMoney(product.price)}</p>
             {discount !== null && (
               <p className="text-[11px] text-muted-foreground">
                 <span className="line-through">{formatMoney(product.original_price)}</span>

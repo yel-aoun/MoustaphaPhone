@@ -31,33 +31,41 @@ export default function Shop() {
   const { activeProducts, isLoading, isError, error } = useStoreProducts();
   const { addToCart } = useCart();
 
-  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
-  const [sortBy, setSortBy] = useState(() => searchParams.get('sort') || 'default');
-  const [minPrice, setMinPrice] = useState(() => searchParams.get('min') || '');
-  const [maxPrice, setMaxPrice] = useState(() => searchParams.get('max') || '');
-  const [saleOnly, setSaleOnly] = useState(() => searchParams.get('sale') === '1');
-  const [inStockOnly, setInStockOnly] = useState(() => searchParams.get('stock') === '1');
   const [categoryOpen, setCategoryOpen] = useState(false);
+
+  // The URL is the single source of truth for filters, so links from anywhere
+  // (header Promotions, Spotlight, brand chips, back button) always apply.
+  const searchQuery = searchParams.get('q') || '';
+  const sortBy = searchParams.get('sort') || 'default';
+  const minPrice = searchParams.get('min') || '';
+  const maxPrice = searchParams.get('max') || '';
+  const saleOnly = searchParams.get('sale') === '1';
+  const inStockOnly = searchParams.get('stock') === '1';
+
+  // Apply several param changes in one URL update (separate calls would overwrite each other)
+  const setParams = (updates) => {
+    const next = new URLSearchParams(searchParams);
+    for (const [key, value] of Object.entries(updates)) {
+      const empty = value === false || value == null || String(value).trim() === '' || (key === 'sort' && value === 'default');
+      if (empty) next.delete(key);
+      else next.set(key, value === true ? '1' : String(value));
+    }
+    setSearchParams(next, { replace: true });
+  };
+  const setParam = (key, value) => setParams({ [key]: value });
+  // Accept a value or an updater function, like useState setters
+  const resolve = (valueOrFn, current) => (typeof valueOrFn === 'function' ? valueOrFn(current) : valueOrFn);
+  const setSearchQuery = (v) => setParam('q', resolve(v, searchQuery));
+  const setSortBy = (v) => setParam('sort', resolve(v, sortBy));
+  const setMinPrice = (v) => setParam('min', resolve(v, minPrice));
+  const setMaxPrice = (v) => setParam('max', resolve(v, maxPrice));
+  const setSaleOnly = (v) => setParam('sale', resolve(v, saleOnly));
+  const setInStockOnly = (v) => setParam('stock', resolve(v, inStockOnly));
 
   const activeCategory = useMemo(() => {
     if (!categorySlug) return 'Tous';
     return categories.find((category) => slugify(category.name) === categorySlug)?.name || 'Tous';
   }, [categories, categorySlug]);
-
-  // Header search navigates here with ?q=, so follow external changes to it
-  const urlQuery = searchParams.get('q') || '';
-  useEffect(() => { setSearchQuery(urlQuery); }, [urlQuery]);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set('q', searchQuery);
-    if (sortBy !== 'default') params.set('sort', sortBy);
-    if (minPrice) params.set('min', minPrice);
-    if (maxPrice) params.set('max', maxPrice);
-    if (saleOnly) params.set('sale', '1');
-    if (inStockOnly) params.set('stock', '1');
-    setSearchParams(params, { replace: true });
-  }, [inStockOnly, maxPrice, minPrice, saleOnly, searchQuery, setSearchParams, sortBy]);
 
   useSeo({
     title: activeCategory === 'Tous' ? 'Boutique' : activeCategory,
@@ -111,21 +119,13 @@ export default function Shop() {
     setCategoryOpen(false);
   };
 
-  const handleReset = () => {
-    setSearchQuery('');
-    setSortBy('default');
-    setMinPrice('');
-    setMaxPrice('');
-    setSaleOnly(false);
-    setInStockOnly(false);
-    navigate('/boutique');
-  };
+  const handleReset = () => navigate('/boutique');
 
   const chips = [
     searchQuery.trim() && { label: `« ${searchQuery.trim()} »`, clear: () => setSearchQuery('') },
     saleOnly && { label: 'En promotion', clear: () => setSaleOnly(false) },
     inStockOnly && { label: 'En stock', clear: () => setInStockOnly(false) },
-    (minPrice || maxPrice) && { label: `${minPrice || 0} – ${maxPrice || '∞'} MAD`, clear: () => { setMinPrice(''); setMaxPrice(''); } },
+    (minPrice || maxPrice) && { label: `${minPrice || 0} – ${maxPrice || '∞'} MAD`, clear: () => setParams({ min: '', max: '' }) },
   ].filter(Boolean);
 
   const pill = (active) => `inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors ${
@@ -238,7 +238,7 @@ export default function Shop() {
                       <button
                         key={`${min}-${max}`}
                         type="button"
-                        onClick={() => { setMinPrice(min ? String(min) : ''); setMaxPrice(max ? String(max) : ''); }}
+                        onClick={() => setParams({ min: min ? String(min) : '', max: max ? String(max) : '' })}
                         className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
                       >
                         {max ? `${min} – ${max}` : `${min}+`}
