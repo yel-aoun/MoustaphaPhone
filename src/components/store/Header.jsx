@@ -7,6 +7,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useCart } from '@/lib/cartStore';
 import { useWishlist } from '@/lib/wishlistStore';
 import { slugify } from '@/lib/products';
+import { ICON_COMPONENTS } from '@/lib/categoryIcons';
 import BrandLogo from '@/components/brand/BrandLogo';
 import SearchSuggestions from '@/components/store/SearchSuggestions';
 
@@ -27,8 +28,6 @@ export default function Header({ products = [], onWishlistOpen }) {
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const inputRef = useRef(null);
-
-  const topCategories = categories.slice(0, 4);
 
   useEffect(() => {
     const open = () => setSearchOpen(true);
@@ -80,13 +79,14 @@ export default function Header({ products = [], onWishlistOpen }) {
 
           <nav className="hidden items-center gap-7 md:flex">
             <NavLink to="/" end className={navLinkClass}>Accueil</NavLink>
-            <NavLink to="/boutique" end className={navLinkClass}>Boutique</NavLink>
-            {topCategories.map(({ name }) => (
-              <NavLink key={name} to={`/category/${slugify(name)}`} className={navLinkClass}>
-                {name}
-              </NavLink>
-            ))}
-            <NavLink to="/track-order" className={navLinkClass}>Suivi</NavLink>
+            <NavLink to="/boutique" end className={({ isActive }) => navLinkClass({ isActive: isActive && !location.search.includes('sale=1') })}>Boutique</NavLink>
+            <Link to="/boutique?sale=1" className={navLinkClass({ isActive: location.search.includes('sale=1') })}>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 animate-blink rounded-full bg-deal" />
+                Promotions
+              </span>
+            </Link>
+            <NavLink to="/track-order" className={navLinkClass}>Suivi de commande</NavLink>
           </nav>
 
           <div className="flex shrink-0 items-center gap-0.5">
@@ -124,9 +124,15 @@ export default function Header({ products = [], onWishlistOpen }) {
             >
               <ShoppingBag className="h-[18px] w-[18px]" />
               {totalItems > 0 && (
-                <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-foreground px-1 text-[10px] font-semibold text-background">
+                <motion.span
+                  key={totalItems}
+                  initial={{ scale: 1.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 14 }}
+                  className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground"
+                >
                   {totalItems}
-                </span>
+                </motion.span>
               )}
             </Link>
           </div>
@@ -204,17 +210,28 @@ export default function Header({ products = [], onWishlistOpen }) {
               {[
                 ['/', 'Accueil'],
                 ['/boutique', 'Toute la boutique'],
-                ...categories.map(({ name }) => [`/category/${slugify(name)}`, name]),
+                ['/boutique?sale=1', 'Promotions'],
                 ['/track-order', 'Suivre ma commande'],
-              ].map(([to, label]) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className="border-b border-border py-4 text-2xl font-semibold tracking-tight text-foreground"
-                >
-                  {label}
-                </Link>
+              ].map(([to, label], i) => (
+                <motion.div key={to} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 * i }}>
+                  <Link to={to} className="block border-b border-border py-4 text-2xl font-semibold tracking-tight text-foreground">
+                    {label}
+                  </Link>
+                </motion.div>
               ))}
+              {categories.length > 0 && (
+                <div className="mt-6 grid grid-cols-3 gap-2">
+                  {categories.map(({ name, icon }) => {
+                    const Icon = icon ? ICON_COMPONENTS[icon] : null;
+                    return (
+                      <Link key={name} to={`/category/${slugify(name)}`} className="flex flex-col items-center gap-2 rounded-2xl bg-secondary px-2 py-4 text-center text-xs font-medium text-foreground">
+                        {Icon && <Icon className="h-5 w-5 text-primary" />}
+                        <span className="w-full truncate">{name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={toggleTheme}

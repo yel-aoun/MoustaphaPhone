@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Check, ChevronDown, Search, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useCart } from '@/lib/cartStore';
 import { useSeo } from '@/lib/seo';
 import { trackEvent } from '@/lib/storeEvents';
@@ -11,6 +11,9 @@ import { slugify } from '@/lib/products';
 import { storeBrand } from '@/lib/brand';
 import StoreLayout, { useStoreProducts } from '@/components/store/StoreLayout';
 import ProductGrid from '@/components/store/ProductGrid';
+import CircuitBackground from '@/components/store/fx/CircuitBackground';
+import CountUp from '@/components/store/fx/CountUp';
+import { ICON_COMPONENTS } from '@/lib/categoryIcons';
 
 const SORT_OPTIONS = [
   { value: 'default', label: 'Recommandés' },
@@ -18,54 +21,6 @@ const SORT_OPTIONS = [
   { value: 'price-asc', label: 'Prix croissant' },
   { value: 'price-desc', label: 'Prix décroissant' },
 ];
-
-function FilterPanel({ categories, counts, total, activeCategory, onCategory, saleOnly, setSaleOnly, inStockOnly, setInStockOnly, minPrice, setMinPrice, maxPrice, setMaxPrice }) {
-  const priceInput = 'h-10 w-full min-w-0 rounded-xl bg-secondary px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
-  const toggle = (active) => `flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-colors ${active ? 'bg-foreground text-background' : 'bg-secondary text-foreground hover:bg-muted'}`;
-
-  return (
-    <div className="space-y-8">
-      <div>
-        <p className="mb-3 text-xs font-semibold text-muted-foreground">Catégories</p>
-        <ul className="space-y-0.5">
-          {[{ name: 'Tous', count: total }, ...categories.map((c) => ({ name: c.name, count: counts[c.name] || 0 }))].map(({ name, count }) => (
-            <li key={name}>
-              <button
-                type="button"
-                onClick={() => onCategory(name)}
-                className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm transition-colors ${
-                  activeCategory === name ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {name === 'Tous' ? 'Tous les produits' : name}
-                <span className="text-xs text-muted-foreground">{count}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="space-y-2">
-        <p className="mb-3 text-xs font-semibold text-muted-foreground">Disponibilité</p>
-        <button type="button" onClick={() => setSaleOnly((v) => !v)} className={toggle(saleOnly)} aria-pressed={saleOnly}>
-          En promotion {saleOnly && <X className="h-3.5 w-3.5" />}
-        </button>
-        <button type="button" onClick={() => setInStockOnly((v) => !v)} className={toggle(inStockOnly)} aria-pressed={inStockOnly}>
-          En stock uniquement {inStockOnly && <X className="h-3.5 w-3.5" />}
-        </button>
-      </div>
-
-      <div>
-        <p className="mb-3 text-xs font-semibold text-muted-foreground">Prix (MAD)</p>
-        <div className="flex items-center gap-2">
-          <input type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className={priceInput} />
-          <span className="text-muted-foreground">–</span>
-          <input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={priceInput} />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -81,7 +36,7 @@ export default function Shop() {
   const [maxPrice, setMaxPrice] = useState(() => searchParams.get('max') || '');
   const [saleOnly, setSaleOnly] = useState(() => searchParams.get('sale') === '1');
   const [inStockOnly, setInStockOnly] = useState(() => searchParams.get('stock') === '1');
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
 
   const activeCategory = useMemo(() => {
     if (!categorySlug) return 'Tous';
@@ -156,7 +111,7 @@ export default function Shop() {
   const goToCategory = (name) => {
     const search = searchParams.toString();
     navigate(`${name === 'Tous' ? '/boutique' : `/category/${slugify(name)}`}${search ? `?${search}` : ''}`);
-    setFiltersOpen(false);
+    setCategoryOpen(false);
   };
 
   const handleReset = () => {
@@ -176,81 +131,137 @@ export default function Shop() {
     (minPrice || maxPrice) && { label: `${minPrice || 0} – ${maxPrice || '∞'} MAD`, clear: () => { setMinPrice(''); setMaxPrice(''); } },
   ].filter(Boolean);
 
-  const filterProps = {
-    categories, counts: productCounts, total: activeProducts.length, activeCategory, onCategory: goToCategory,
-    saleOnly, setSaleOnly, inStockOnly, setInStockOnly, minPrice, setMinPrice, maxPrice, setMaxPrice,
-  };
-  const filterCount = chips.length - (searchQuery.trim() ? 1 : 0);
+  const pill = (active) => `inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors ${
+    active ? 'border-foreground bg-foreground text-background' : 'border-border bg-background text-foreground hover:border-foreground'
+  }`;
+  const priceInput = 'h-10 w-full min-w-0 rounded-xl bg-secondary px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+  const ActiveIcon = categories.find((c) => c.name === activeCategory)?.icon;
+  const BannerIcon = ActiveIcon ? ICON_COMPONENTS[ActiveIcon] : null;
 
   return (
     <StoreLayout>
-      <div className="container-store pb-16 pt-8 sm:pt-12">
-        <nav className="mb-3 text-xs text-muted-foreground">
-          <Link to="/" className="hover:text-foreground">Accueil</Link>
-          <span className="mx-1.5">/</span>
-          {activeCategory === 'Tous' ? <span className="text-foreground">Boutique</span> : (
-            <>
-              <Link to="/boutique" className="hover:text-foreground">Boutique</Link>
-              <span className="mx-1.5">/</span>
-              <span className="text-foreground">{activeCategory}</span>
-            </>
-          )}
-        </nav>
-        <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-          {activeCategory === 'Tous' ? 'Boutique' : activeCategory}
-        </h1>
-
-        {/* Mobile category chips */}
-        <div className="no-scrollbar -mx-4 mt-6 flex gap-2 overflow-x-auto px-4 lg:hidden">
-          {['Tous', ...categories.map((c) => c.name)].map((name) => (
-            <button
-              key={name}
-              type="button"
-              onClick={() => goToCategory(name)}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                activeCategory === name ? 'bg-foreground text-background' : 'bg-secondary text-foreground'
-              }`}
-            >
-              {name === 'Tous' ? 'Tout' : name}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-8 grid gap-10 lg:grid-cols-[220px_1fr]">
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <FilterPanel {...filterProps} />
-            </div>
-          </aside>
-
-          <div className="min-w-0">
-            {/* Toolbar */}
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Rechercher dans la boutique"
-                  className="h-11 w-full rounded-full bg-secondary pl-10 pr-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
-                />
-                {searchQuery && (
-                  <button type="button" onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2" aria-label="Effacer la recherche">
-                    <X className="h-4 w-4 text-muted-foreground" />
-                  </button>
+      {/* Page banner */}
+      <section className="relative overflow-hidden border-b border-border bg-secondary">
+        <CircuitBackground className="text-foreground [mask-image:linear-gradient(90deg,transparent_35%,#000_75%)]" />
+        <div className="container-store relative py-10 sm:py-14">
+          <nav className="mb-3 text-xs text-muted-foreground">
+            <Link to="/" className="hover:text-foreground">Accueil</Link>
+            <span className="mx-1.5">/</span>
+            {activeCategory === 'Tous' ? <span className="text-foreground">Boutique</span> : (
+              <>
+                <Link to="/boutique" className="hover:text-foreground">Boutique</Link>
+                <span className="mx-1.5">/</span>
+                <span className="text-foreground">{activeCategory}</span>
+              </>
+            )}
+          </nav>
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <h1 className="flex items-center gap-3 text-4xl font-semibold tracking-tight text-foreground sm:text-6xl">
+                {BannerIcon && (
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background text-primary shadow-soft sm:h-14 sm:w-14">
+                    <BannerIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </span>
                 )}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen(true)}
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border px-4 text-sm font-medium text-foreground lg:hidden"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Filtres{filterCount > 0 ? ` (${filterCount})` : ''}
+                {saleOnly && activeCategory === 'Tous' ? 'Promotions' : activeCategory === 'Tous' ? 'Boutique' : activeCategory}
+              </h1>
+              <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+                <span className="font-semibold text-foreground"><CountUp to={sorted.length} duration={0.8} /></span> produit{sorted.length !== 1 ? 's' : ''} · livraison partout au Maroc
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="container-store pb-16 pt-6">
+        {/* Toolbar */}
+        <div className="sticky top-14 z-30 -mx-4 bg-background/85 px-4 py-3 backdrop-blur-xl sm:top-16 sm:mx-0 sm:px-0">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="relative lg:w-80">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher dans la boutique"
+                className="h-10 w-full rounded-full bg-secondary pl-10 pr-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2" aria-label="Effacer la recherche">
+                  <X className="h-4 w-4 text-muted-foreground" />
                 </button>
+              )}
+            </div>
+
+            <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-1 lg:px-0">
+              <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                <PopoverTrigger asChild>
+                  <button type="button" className={pill(activeCategory !== 'Tous')}>
+                    {activeCategory === 'Tous' ? 'Catégorie' : activeCategory}
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-64 rounded-2xl p-1.5">
+                  {[{ name: 'Tous', count: activeProducts.length }, ...categories.map((c) => ({ ...c, count: productCounts[c.name] || 0 }))].map(({ name, icon, count }) => {
+                    const Icon = icon ? ICON_COMPONENTS[icon] : null;
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => goToCategory(name)}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-secondary"
+                      >
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-primary">
+                          {Icon ? <Icon className="h-3.5 w-3.5" /> : <Search className="h-3.5 w-3.5" />}
+                        </span>
+                        <span className="flex-1">{name === 'Tous' ? 'Tous les produits' : name}</span>
+                        <span className="text-xs text-muted-foreground">{count}</span>
+                        {activeCategory === name && <Check className="h-4 w-4 text-primary" />}
+                      </button>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button type="button" className={pill(Boolean(minPrice || maxPrice))}>
+                    {minPrice || maxPrice ? `${minPrice || 0} – ${maxPrice || '∞'} MAD` : 'Prix'}
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-72 rounded-2xl p-4">
+                  <p className="mb-3 text-xs font-semibold text-muted-foreground">Prix (MAD)</p>
+                  <div className="flex items-center gap-2">
+                    <input type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className={priceInput} />
+                    <span className="text-muted-foreground">–</span>
+                    <input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={priceInput} />
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {[[0, 500], [500, 2000], [2000, 8000], [8000, '']].map(([min, max]) => (
+                      <button
+                        key={`${min}-${max}`}
+                        type="button"
+                        onClick={() => { setMinPrice(min ? String(min) : ''); setMaxPrice(max ? String(max) : ''); }}
+                        className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
+                      >
+                        {max ? `${min} – ${max}` : `${min}+`}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <button type="button" onClick={() => setSaleOnly((v) => !v)} className={pill(saleOnly)} aria-pressed={saleOnly}>
+                <span className={`h-1.5 w-1.5 rounded-full ${saleOnly ? 'bg-background' : 'bg-deal'}`} />
+                Promo
+              </button>
+              <button type="button" onClick={() => setInStockOnly((v) => !v)} className={pill(inStockOnly)} aria-pressed={inStockOnly}>
+                En stock
+              </button>
+
+              <div className="ml-auto shrink-0">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-11 flex-1 rounded-full border-border px-4 text-sm sm:w-[180px] sm:flex-none">
+                  <SelectTrigger className="h-10 w-[170px] rounded-full border-border px-4 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -261,64 +272,43 @@ export default function Shop() {
                 </Select>
               </div>
             </div>
-
-            <div className="mb-6 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {sorted.length} produit{sorted.length !== 1 ? 's' : ''}
-              </span>
-              {chips.map(({ label, clear }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={clear}
-                  className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
-                >
-                  {label}
-                  <X className="h-3 w-3" />
-                </button>
-              ))}
-              {(chips.length > 0 || activeCategory !== 'Tous') && (
-                <button type="button" onClick={handleReset} className="text-xs font-medium text-primary hover:underline">
-                  Tout effacer
-                </button>
-              )}
-            </div>
-
-            <ProductGrid
-              products={sorted}
-              onAddToCart={addToCart}
-              isLoading={isLoading}
-              onReset={handleReset}
-              suggestedCategories={categories}
-            />
-            {isError && (
-              <div className="mt-4 rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                Impossible de charger le catalogue : {error?.message || 'erreur API'}.
-              </div>
-            )}
           </div>
         </div>
-      </div>
 
-      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl p-0 lg:hidden">
-          <SheetHeader className="px-5 pb-2 pt-5 text-left">
-            <SheetTitle className="text-lg font-semibold">Filtres</SheetTitle>
-            <SheetDescription className="sr-only">Catégorie, disponibilité et prix.</SheetDescription>
-          </SheetHeader>
-          <div className="px-5 py-4">
-            <FilterPanel {...filterProps} />
-          </div>
-          <div className="sticky bottom-0 grid grid-cols-2 gap-2 border-t border-border bg-background px-5 py-4">
-            <button type="button" onClick={handleReset} className="h-12 rounded-full border border-border text-sm font-medium">
-              Réinitialiser
+        {(chips.length > 0 || activeCategory !== 'Tous') && (
+          <div className="mb-2 mt-3 flex flex-wrap items-center gap-2">
+            {chips.map(({ label, clear }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={clear}
+                className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
+              >
+                {label}
+                <X className="h-3 w-3" />
+              </button>
+            ))}
+            <button type="button" onClick={handleReset} className="text-xs font-medium text-primary hover:underline">
+              Tout effacer
             </button>
-            <button type="button" onClick={() => setFiltersOpen(false)} className="h-12 rounded-full bg-foreground text-sm font-medium text-background">
-              Voir {sorted.length} produit{sorted.length !== 1 ? 's' : ''}
-            </button>
           </div>
-        </SheetContent>
-      </Sheet>
+        )}
+
+        <div className="mt-6">
+          <ProductGrid
+            products={sorted}
+            onAddToCart={addToCart}
+            isLoading={isLoading}
+            onReset={handleReset}
+            suggestedCategories={categories}
+          />
+          {isError && (
+            <div className="mt-4 rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              Impossible de charger le catalogue : {error?.message || 'erreur API'}.
+            </div>
+          )}
+        </div>
+      </div>
     </StoreLayout>
   );
 }

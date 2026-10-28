@@ -11,6 +11,10 @@ import FeaturedSection from '@/components/store/FeaturedSection';
 import BrandStrip from '@/components/store/BrandStrip';
 import TrustBadges from '@/components/store/TrustBadges';
 import RecentlyViewedSection from '@/components/store/RecentlyViewedSection';
+import HowItWorks from '@/components/store/HowItWorks';
+import TechTicker from '@/components/store/fx/TechTicker';
+import CircuitBackground from '@/components/store/fx/CircuitBackground';
+import Reveal from '@/components/store/fx/Reveal';
 
 export default function Home() {
   const { config: heroConfig } = useHeroConfig();
@@ -33,6 +37,10 @@ export default function Home() {
     [available]
   );
 
+  const maxDiscount = onSale.length
+    ? Math.max(...onSale.map((p) => Math.round(((p.original_price - p.price) / p.original_price) * 100)))
+    : 0;
+
   const heroProducts = useMemo(() => {
     const seen = new Set();
     return [...onSale, ...newest, ...activeProducts].filter((p) => {
@@ -44,7 +52,8 @@ export default function Home() {
 
   return (
     <StoreLayout>
-      <HeroSlider products={heroProducts} heroConfig={heroConfig} />
+      <HeroSlider products={heroProducts} heroConfig={heroConfig} totalProducts={activeProducts.length} />
+      <TechTicker />
 
       {isError && (
         <div className="container-store pt-6">
@@ -66,18 +75,28 @@ export default function Home() {
 
       {onSale.length > 0 && (
         <section className="container-store pb-14 sm:pb-20">
-          <div className="rounded-3xl bg-primary px-6 py-10 text-primary-foreground sm:px-12 sm:py-14">
-            <p className="text-sm font-medium opacity-80">Offres du moment</p>
-            <h2 className="mt-2 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl">
-              Jusqu'à −{Math.max(...onSale.map((p) => Math.round(((p.original_price - p.price) / p.original_price) * 100)))}% sur une sélection.
-            </h2>
-            <Link
-              to="/boutique?sale=1"
-              className="mt-6 inline-flex h-11 items-center rounded-full bg-primary-foreground px-6 text-sm font-medium text-primary transition-opacity hover:opacity-90"
-            >
-              Voir les offres
-            </Link>
-          </div>
+          <Reveal>
+            <div className="relative overflow-hidden rounded-3xl bg-[hsl(215_45%_10%)] px-6 py-12 text-white sm:px-12 sm:py-16">
+              <CircuitBackground className="text-sky-200" />
+              <div className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-[radial-gradient(circle,hsl(200_90%_60%/0.35),transparent_65%)]" />
+              <div className="relative max-w-lg">
+                <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-sky-100">
+                  <span className="h-1.5 w-1.5 animate-blink rounded-full bg-sky-300" />
+                  Offres du moment
+                </p>
+                <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">
+                  Jusqu’à −{maxDiscount}%<br className="hidden sm:block" /> sur une sélection.
+                </h2>
+                <p className="mt-3 text-sm text-white/70 sm:text-base">{onSale.length} produit{onSale.length > 1 ? 's' : ''} en promotion, tant qu’il y a du stock.</p>
+                <Link
+                  to="/boutique?sale=1"
+                  className="mt-7 inline-flex h-12 items-center rounded-full bg-white px-7 text-sm font-medium text-[hsl(215_45%_10%)] transition-transform hover:-translate-y-0.5"
+                >
+                  Voir les offres
+                </Link>
+              </div>
+            </div>
+          </Reveal>
         </section>
       )}
 
@@ -89,6 +108,8 @@ export default function Home() {
           viewAllTo="/boutique?sale=1"
         />
       )}
+
+      <HowItWorks />
 
       <BrandStrip products={activeProducts} />
 

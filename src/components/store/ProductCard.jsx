@@ -7,6 +7,7 @@ import { useCart } from '@/lib/cartStore';
 import { cloudinaryImage, productImageSrcSet } from '@/lib/images';
 import { formatMoney, getProductPath } from '@/lib/products';
 import { trackProductEvent } from '@/lib/storeEvents';
+import TiltCard from '@/components/store/fx/TiltCard';
 
 const BADGE_LABELS = {
   best_seller: 'Best seller',
@@ -60,7 +61,10 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
 
   return (
     <Link to={path} className="group flex h-full flex-col" aria-label={product.name}>
+      <TiltCard className="rounded-2xl" max={6} glare={false}>
       <div className="photo-well relative aspect-[4/5] overflow-hidden rounded-2xl">
+        {/* Light sweep on hover */}
+        <span className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-1/3 -translate-x-[120%] bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:animate-shine" />
         {product.image_url ? (
           <img
             src={cloudinaryImage(product.image_url, { width: 480, height: 600, crop: 'pad' })}
@@ -83,13 +87,14 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
           type="button"
           onClick={handleWishlist}
           aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-          className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 transition-all active:scale-90 ${
+          className={`absolute right-3 top-3 z-[2] flex h-8 w-8 items-center justify-center rounded-full bg-background/90 transition-all active:scale-90 ${
             isWishlisted ? 'text-primary' : 'text-muted-foreground hover:text-foreground md:opacity-0 md:group-hover:opacity-100'
           }`}
         >
           <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
         </button>
       </div>
+      </TiltCard>
 
       <div className="flex flex-1 flex-col px-1 pt-3">
         {label && (

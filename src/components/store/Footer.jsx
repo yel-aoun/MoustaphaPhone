@@ -50,7 +50,11 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="border-t border-border bg-secondary">
+      <footer className="relative bg-secondary">
+        {/* Live circuit line along the top edge */}
+<div className="absolute inset-x-0 top-0 h-px overflow-hidden bg-border" aria-hidden="true">
+          <span className="absolute inset-y-0 w-1/5 animate-slide-x bg-gradient-to-r from-transparent via-primary to-transparent" style={{ animationDuration: '6s' }} />
+        </div>
         <div className="container-store py-12">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <div className="space-y-4">

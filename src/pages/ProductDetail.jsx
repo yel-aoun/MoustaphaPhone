@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import StoreLayout from '@/components/store/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
+import DeliveryTimeline from '@/components/store/DeliveryTimeline';
 import RecentlyViewedSection from '@/components/store/RecentlyViewedSection';
 import { useCart } from '@/lib/cartStore';
 import { useWishlist } from '@/lib/wishlistStore';
@@ -255,6 +256,7 @@ export default function ProductDetail() {
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
                 >
+                  <span key={activeSrc} className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-1/3 animate-scan bg-gradient-to-b from-transparent via-primary/15 to-transparent [animation-iteration-count:1]" />
                   {activeSrc ? (
                     <img
                       src={cloudinaryImage(activeSrc, { width: 900 })}
@@ -265,7 +267,7 @@ export default function ProductDetail() {
                       decoding="async"
                       fetchPriority="high"
                       onClick={() => setLightboxOpen(true)}
-                      className={`h-full w-full cursor-zoom-in bg-transparent object-contain p-8 mix-blend-multiply ${isOutOfStock ? 'opacity-60' : ''}`}
+                      className={`relative h-full w-full cursor-zoom-in bg-transparent object-contain p-8 mix-blend-multiply ${isOutOfStock ? 'opacity-60' : ''}`}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-secondary text-muted-foreground">
@@ -473,20 +475,7 @@ export default function ProductDetail() {
                   </a>
                 </div>
 
-                <div className="grid gap-3 rounded-3xl bg-secondary p-5 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Truck className="h-4 w-4 text-primary" />
-                    <span>Livraison partout au Maroc sous 24-72h selon la ville.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RotateCcw className="h-4 w-4 text-primary" />
-                    <span>Retours acceptés sous 7 jours si le produit est intact.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    <span>Support {storeBrand.name} disponible avant et après commande.</span>
-                  </div>
-                </div>
+                <DeliveryTimeline />
               </div>
             </section>
 

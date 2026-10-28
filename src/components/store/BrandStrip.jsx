@@ -34,20 +34,30 @@ export default function BrandStrip({ products = [] }) {
 
   if (brands.length === 0) return null;
 
+  // Repeat the list so the marquee track is always wider than the screen
+  const track = Array.from({ length: Math.max(2, Math.ceil(10 / brands.length)) }).flatMap(() => brands);
+
   return (
-    <section className="container-store pb-14 sm:pb-20">
-      <h2 className="section-title mb-6">Nos marques</h2>
-      <div className="no-scrollbar -mx-4 flex gap-2.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
-        {brands.map(({ name, count, query }) => (
-          <Link
-            key={name}
-            to={`/boutique?q=${encodeURIComponent(query)}`}
-            className="flex shrink-0 items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-foreground"
-          >
-            {name}
-            <span className="text-xs text-muted-foreground">{count}</span>
-          </Link>
-        ))}
+    <section className="pb-14 sm:pb-20">
+      <h2 className="section-title container-store mb-6">Nos marques</h2>
+      <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
+        <div className="pause-on-hover flex w-max animate-marquee gap-3" style={{ animationDuration: `${track.length * 3}s` }}>
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex shrink-0 gap-3" aria-hidden={copy === 1}>
+              {track.map(({ name, count, query }, i) => (
+                <Link
+                  key={`${copy}-${name}-${i}`}
+                  to={`/boutique?q=${encodeURIComponent(query)}`}
+                  tabIndex={copy === 1 ? -1 : undefined}
+                  className="group flex shrink-0 items-center gap-3 rounded-2xl border border-border bg-background px-6 py-4 transition-colors hover:border-primary"
+                >
+                  <span className="text-xl font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">{name}</span>
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">{count}</span>
+                </Link>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

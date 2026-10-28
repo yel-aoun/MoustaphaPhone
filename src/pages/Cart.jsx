@@ -10,7 +10,9 @@ import { trackEvent } from '@/lib/storeEvents';
 import { formatMoney, getProductPath, toPublicUrl } from '@/lib/products';
 import { getImageForColor, getProductColors } from '@/lib/productOptions';
 import { useSeo } from '@/lib/seo';
+import { motion } from 'framer-motion';
 import StoreLayout, { useStoreProducts } from '@/components/store/StoreLayout';
+import CircuitBackground from '@/components/store/fx/CircuitBackground';
 
 const DELIVERY_FEE = 40;
 const COMMON_CITIES = ['Casablanca', 'Rabat', 'Marrakech', 'Tanger', 'Fès', 'Agadir'];
@@ -143,13 +145,20 @@ export default function Cart() {
   if (cart.length === 0) {
     return (
       <StoreLayout>
-        <div className="container-store flex flex-col items-center py-24 text-center">
-          <ShoppingBag className="h-12 w-12 text-muted-foreground/40" strokeWidth={1.5} />
+        <div className="relative overflow-hidden">
+        <CircuitBackground className="text-foreground" />
+        <div className="container-store relative flex flex-col items-center py-24 text-center">
+          <div className="relative flex h-28 w-28 items-center justify-center">
+            <span className="absolute inset-0 animate-spin-slow rounded-full border border-dashed border-foreground/20" />
+            <span className="absolute inset-3 rounded-full bg-secondary" />
+            <ShoppingBag className="relative h-10 w-10 animate-float text-primary" strokeWidth={1.5} />
+          </div>
           <h1 className="mt-5 text-3xl font-semibold tracking-tight text-foreground">Votre panier est vide.</h1>
           <p className="mt-2 text-muted-foreground">Découvrez nos téléphones et accessoires.</p>
           <Link to="/boutique" className="mt-8 inline-flex h-12 items-center rounded-full bg-primary px-8 text-sm font-medium text-primary-foreground">
             Aller à la boutique
           </Link>
+        </div>
         </div>
       </StoreLayout>
     );
@@ -171,22 +180,28 @@ export default function Cart() {
           {isForm ? 'Vos coordonnées' : 'Votre panier'}
         </h1>
 
-        {/* Steps */}
-        <ol className="mt-6 flex items-center gap-3 text-xs font-medium">
-          {['Panier', 'Coordonnées', 'Confirmation WhatsApp'].map((label, i) => {
-            const active = (i === 0 && !isForm) || (i === 1 && isForm);
-            const done = i === 0 && isForm;
-            return (
-              <li key={label} className={`flex items-center gap-2 ${active ? 'text-foreground' : done ? 'text-primary' : 'text-muted-foreground'}`}>
-                <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${active ? 'bg-foreground text-background' : done ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
-                  {i + 1}
-                </span>
-                <span className={i === 2 ? 'hidden sm:inline' : ''}>{label}</span>
-                {i < 2 && <span className="h-px w-6 bg-border" />}
-              </li>
-            );
-          })}
-        </ol>
+        {/* Steps — a progress bar that "charges" as you advance */}
+        <div className="mt-6 max-w-xl">
+          <div className="relative h-2 overflow-hidden rounded-full bg-secondary">
+            <motion.div
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-sky-500"
+              initial={false}
+              animate={{ width: isForm ? '66%' : '33%' }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            />
+            <span className="absolute inset-0 animate-marquee bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.45),transparent)] bg-[length:50%_100%] bg-repeat-x" />
+          </div>
+          <ol className="mt-2 grid grid-cols-3 text-xs font-medium">
+            {['Panier', 'Coordonnées', 'WhatsApp'].map((label, i) => {
+              const reached = i === 0 || (i === 1 && isForm);
+              return (
+                <li key={label} className={`${i === 1 ? 'text-center' : i === 2 ? 'text-right' : ''} ${reached ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {label}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
           {/* Left column */}
