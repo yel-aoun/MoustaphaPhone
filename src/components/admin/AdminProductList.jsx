@@ -270,7 +270,7 @@ export default function AdminProductList({ onEdit, editingProductId }) {
             <p className="hidden text-sm text-slate-400 sm:block">
               {filteredProducts.length} affiché{filteredProducts.length > 1 ? 's' : ''}
             </p>
-            <div className="flex rounded-lg border border-white/10 bg-white/[0.03] p-1">
+            <div className="flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
@@ -437,7 +437,7 @@ export default function AdminProductList({ onEdit, editingProductId }) {
                               if (event.key === 'Escape') setEditingPriceId(null);
                             }}
                             autoFocus
-                            className="h-8 w-24 rounded-lg border border-white/10 bg-white/[0.06] px-2 text-right font-mono text-sm text-white outline-none focus:border-primary/50"
+                            className="h-8 w-24 rounded-2xl border border-white/10 bg-white/[0.06] px-2 text-right font-mono text-sm text-white outline-none focus:border-primary/50"
                           />
                         ) : (
                           <button
@@ -561,7 +561,7 @@ export default function AdminProductList({ onEdit, editingProductId }) {
                           if (event.key === 'Escape') setEditingPriceId(null);
                         }}
                         autoFocus
-                        className="h-8 w-24 rounded-lg border border-white/10 bg-white/[0.06] px-2 text-right font-mono text-sm text-white outline-none focus:border-primary/50"
+                        className="h-8 w-24 rounded-2xl border border-white/10 bg-white/[0.06] px-2 text-right font-mono text-sm text-white outline-none focus:border-primary/50"
                       />
                     ) : (
                       <button

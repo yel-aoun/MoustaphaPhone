@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 function IconPicker({ value, onChange }) {
   return (
-    <div className="grid grid-cols-6 gap-1.5 rounded-xl border border-white/10 bg-[#0d1526] p-3 sm:grid-cols-8">
+    <div className="grid grid-cols-6 gap-1.5 rounded-xl border border-white/10 bg-[#0d1017] p-3 sm:grid-cols-8">
       {AVAILABLE_ICONS.map(({ name, label }) => {
         const Icon = ICON_COMPONENTS[name];
         const isSelected = value === name;

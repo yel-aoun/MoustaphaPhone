@@ -69,7 +69,7 @@ function OrderRow({ order, onStatusChange, onDelete, onOpen }) {
 
           <button
             onClick={() => onOpen(order)}
-            className="h-7 rounded-lg border border-white/10 px-2 text-xs font-semibold text-slate-400 transition-colors hover:border-primary/30 hover:text-primary"
+            className="h-7 rounded-2xl border border-white/10 px-2 text-xs font-semibold text-slate-400 transition-colors hover:border-primary/30 hover:text-primary"
           >
             Détails
           </button>
@@ -175,7 +175,7 @@ export default function AdminOrderList() {
         </div>
         <button
           onClick={() => refetch()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-white/10 text-xs text-slate-300 hover:border-white/20 hover:text-white transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Actualiser
@@ -255,7 +255,7 @@ export default function AdminOrderList() {
       )}
 
       <Sheet open={Boolean(selectedOrder)} onOpenChange={(open) => !open && setSelectedOrderId(null)}>
-        <SheetContent side="right" className="w-full overflow-y-auto border-white/10 bg-[#0b1020] p-0 text-slate-100 sm:max-w-lg">
+        <SheetContent side="right" className="w-full overflow-y-auto border-white/10 bg-[#0d1017] p-0 text-slate-100 sm:max-w-lg">
           {selectedOrder && (
             <>
               <SheetHeader className="border-b border-white/10 px-5 py-5 text-left">
@@ -371,7 +371,7 @@ export default function AdminOrderList() {
                         href={buildOrderWhatsAppLink(selectedOrder, message)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-slate-300 transition-colors hover:border-green-500/30 hover:text-green-300"
+                        className="inline-flex h-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-slate-300 transition-colors hover:border-green-500/30 hover:text-green-300"
                       >
                         {label}
                       </a>

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { adminAuth } from '@/api/base44Client';
+import CircuitBackground from '@/components/store/fx/CircuitBackground';
 import BrandLogo from '@/components/brand/BrandLogo';
 
 export default function AdminLogin() {
@@ -26,13 +27,15 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+    <div className="admin-shell dark relative flex min-h-screen items-center justify-center overflow-hidden bg-[#07090f] p-4">
+      <CircuitBackground className="text-slate-400 opacity-50" />
+      <div className="pointer-events-none absolute left-1/2 top-1/3 h-[420px] w-[420px] -translate-x-1/2 animate-aurora rounded-full bg-primary/20 blur-3xl" />
+      <div className="relative w-full max-w-sm">
         <BrandLogo size="md" subtitle="Admin" dark className="mb-8 justify-center" />
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4)]"
+          className="liquid-glass space-y-4 rounded-[28px] p-6"
         >
           <div className="space-y-1.5">
             <Label className="text-slate-300 text-sm">Email</Label>
@@ -42,7 +45,7 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                className="pl-10 h-11 border-white/10 bg-white/[0.05] text-white placeholder:text-slate-600"
+                className="h-11 rounded-xl border-white/10 bg-white/[0.05] pl-10 text-white placeholder:text-slate-600"
                 placeholder="admin@example.com"
                 autoFocus
                 required
@@ -58,7 +61,7 @@ export default function AdminLogin() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                className="pl-10 pr-10 h-11 border-white/10 bg-white/[0.05] text-white placeholder:text-slate-600"
+                className="h-11 rounded-xl border-white/10 bg-white/[0.05] pl-10 pr-10 text-white placeholder:text-slate-600"
                 placeholder="••••••••"
                 required
               />
@@ -81,7 +84,7 @@ export default function AdminLogin() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-primary hover:bg-primary/90 rounded-xl font-semibold shadow-[0_8px_24px_rgba(124,58,237,0.3)]"
+            className="h-11 w-full rounded-full bg-primary font-semibold shadow-[0_10px_30px_-10px_hsl(var(--primary))] hover:bg-primary/90"
           >
             {loading ? 'Connexion…' : 'Se connecter'}
           </Button>

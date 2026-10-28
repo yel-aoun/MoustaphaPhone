@@ -261,7 +261,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-white/10 px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:border-white/20 hover:text-white"
+            className="rounded-2xl border border-white/10 px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:border-white/20 hover:text-white"
           >
             Annuler
           </button>
@@ -329,7 +329,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                   >
                     <img src={img.preview} alt="" className="h-full w-full object-cover" />
                     {uploadingIdx === idx && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-[#0f172a]/80">
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#0d1017]/80">
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
                       </div>
                     )}
@@ -357,7 +357,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                       value={img.url || ''}
                       onChange={(e) => handleUrlChange(idx, e.target.value)}
                       placeholder="https://..."
-                      className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#0f172a]/95 px-2 py-1 text-[10px] text-slate-200 outline-none placeholder:text-slate-500"
+                      className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#0d1017]/95 px-2 py-1 text-[10px] text-slate-200 outline-none placeholder:text-slate-500"
                     />
                   </div>
                 )}
@@ -377,7 +377,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                     type="button"
                     onClick={() => moveImage(idx, -1)}
                     disabled={idx === 0}
-                    className="flex h-6 w-6 items-center justify-center rounded-md bg-[#0f172a]/90 text-white disabled:opacity-30"
+                    className="flex h-6 w-6 items-center justify-center rounded-md bg-[#0d1017]/90 text-white disabled:opacity-30"
                     aria-label="Déplacer l'image vers la gauche"
                   >
                     <ArrowLeft className="h-3 w-3" />
@@ -386,7 +386,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                     type="button"
                     onClick={() => moveImage(idx, 1)}
                     disabled={idx === form.images.length - 1}
-                    className="flex h-6 w-6 items-center justify-center rounded-md bg-[#0f172a]/90 text-white disabled:opacity-30"
+                    className="flex h-6 w-6 items-center justify-center rounded-md bg-[#0d1017]/90 text-white disabled:opacity-30"
                     aria-label="Déplacer l'image vers la droite"
                   >
                     <ArrowRight className="h-3 w-3" />

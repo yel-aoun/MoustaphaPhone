@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { normalizeText } from '@/lib/search';
 
 const VIEW_ACTIONS = [
   { id: 'dashboard', label: 'Tableau de bord', hint: 'Voir les ventes et alertes', icon: BarChart2, view: 'dashboard' },
@@ -22,6 +23,8 @@ const VIEW_ACTIONS = [
   { id: 'categories', label: 'Catégories', hint: 'Organiser la navigation', icon: Tag, view: 'categories' },
   { id: 'hero', label: 'Hero Section', hint: 'Gérer le slider boutique', icon: SlidersHorizontal, view: 'hero' },
 ];
+
+export const ADMIN_PALETTE_EVENT = 'admin-open-command-palette';
 
 export default function AdminCommandPalette({ onViewChange, onEditProduct }) {
   const [open, setOpen] = useState(false);
@@ -47,8 +50,13 @@ export default function AdminCommandPalette({ onViewChange, onEditProduct }) {
       }
       if (event.key === 'Escape') setOpen(false);
     };
+    const openPalette = () => setOpen(true);
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener(ADMIN_PALETTE_EVENT, openPalette);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener(ADMIN_PALETTE_EVENT, openPalette);
+    };
   }, []);
 
   useEffect(() => {
@@ -83,10 +91,10 @@ export default function AdminCommandPalette({ onViewChange, onEditProduct }) {
   }, [onEditProduct, onViewChange, orders, products]);
 
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    const needle = normalizeText(query);
     if (!needle) return actions.slice(0, 12);
     return actions
-      .filter((action) => `${action.label} ${action.hint}`.toLowerCase().includes(needle))
+      .filter((action) => normalizeText(`${action.label} ${action.hint}`).includes(needle))
       .slice(0, 16);
   }, [actions, query]);
 
@@ -95,22 +103,11 @@ export default function AdminCommandPalette({ onViewChange, onEditProduct }) {
     setOpen(false);
   };
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 z-40 hidden items-center gap-2 rounded-lg border border-white/10 bg-[#0d1426]/95 px-3 py-2 text-xs font-semibold text-slate-400 shadow-lg shadow-black/20 backdrop-blur transition-colors hover:text-white lg:flex"
-      >
-        <Command className="h-3.5 w-3.5" />
-        Ctrl K
-      </button>
-    );
-  }
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 px-3 py-16 backdrop-blur-sm sm:px-6" role="dialog" aria-modal="true">
-      <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-white/10 bg-[#0d1426] shadow-2xl">
+      <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-white/10 bg-[#0d1017] shadow-2xl">
         <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
           <Search className="h-4 w-4 text-slate-500" />
           <input

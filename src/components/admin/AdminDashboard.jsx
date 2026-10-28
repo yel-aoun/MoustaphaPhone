@@ -19,6 +19,8 @@ import {
 import { useCategories } from '@/hooks/useCategories';
 import { cloudinaryImage } from '@/lib/images';
 import { storeBrand } from '@/lib/brand';
+import CountUp from '@/components/store/fx/CountUp';
+import { trackSpotlight } from '@/components/store/fx/spotlight';
 
 const ORDER_STATUS = {
   pending: { label: 'En attente', className: 'bg-orange-500/12 text-orange-300 border-orange-500/20' },
@@ -31,7 +33,12 @@ function formatMoney(value) {
   return `${Number(value || 0).toLocaleString('fr-MA')} MAD`;
 }
 
-function MetricCard({ label, value, helper, icon: Icon, tone = 'primary' }) {
+// Numbers count up; strings (e.g. "9/10") render as-is
+function MetricValue({ value, suffix = '' }) {
+  return typeof value === 'number' ? <CountUp to={value} suffix={suffix} duration={1} /> : value;
+}
+
+function MetricCard({ label, value, suffix, helper, icon: Icon, tone = 'primary' }) {
   const tones = {
     primary: 'bg-primary/12 text-primary border-primary/20',
     emerald: 'bg-emerald-500/12 text-emerald-300 border-emerald-500/20',
@@ -41,26 +48,26 @@ function MetricCard({ label, value, helper, icon: Icon, tone = 'primary' }) {
   };
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.045] p-4 shadow-sm shadow-black/10">
+    <div className="spotlight rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm transition-colors hover:border-white/20 sm:p-5" onPointerMove={trackSpotlight}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
-          <p className="mt-3 text-2xl font-extrabold tracking-normal text-white">{value}</p>
+          <p className="text-xs font-medium text-slate-400">{label}</p>
+          <p className="mt-2 text-xl font-semibold tracking-tight text-white tabular-nums sm:text-3xl"><MetricValue value={value} suffix={suffix} /></p>
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg border ${tones[tone]}`}>
+        <div className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl border sm:flex ${tones[tone]}`}>
           <Icon className="h-4 w-4" />
         </div>
       </div>
-      {helper && <p className="mt-3 text-sm text-slate-400">{helper}</p>}
+      {helper && <p className="mt-2 text-xs text-slate-400 sm:mt-3 sm:text-sm">{helper}</p>}
     </div>
   );
 }
 
 function Panel({ title, children, action }) {
   return (
-    <section className="rounded-lg border border-white/10 bg-white/[0.045] p-5 shadow-sm shadow-black/10">
+    <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-300">{title}</h3>
+        <h3 className="text-base font-semibold tracking-tight text-white">{title}</h3>
         {action}
       </div>
       {children}
@@ -161,17 +168,25 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">{storeBrand.name} Admin</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-normal text-white">Tableau de bord</h1>
-          <p className="mt-1 text-sm text-slate-400">Commandes, visibilité boutique et catalogue en un coup d'oeil.</p>
+          <p className="text-sm capitalize text-slate-400">
+            {new Date().toLocaleDateString('fr-MA', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            {new Date().getHours() < 18 ? 'Bonjour' : 'Bonsoir'} 👋
+          </h1>
+          <p className="mt-1 text-sm text-slate-400">Voici ce qui se passe sur {storeBrand.name} aujourd’hui.</p>
         </div>
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-400">
-          Actualisation auto des commandes: <span className="font-semibold text-slate-200">30s</span>
+        <div className="flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping-slow rounded-full bg-emerald-400 opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
+          Live · commandes actualisées toutes les 30 s
         </div>
       </div>
 
       <div
-        className={`rounded-lg border px-4 py-3 text-sm ${
+        className={`rounded-2xl border px-4 py-3 text-sm ${
           health?.ok
             ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200'
             : 'border-orange-500/20 bg-orange-500/10 text-orange-200'
@@ -192,17 +207,18 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <MetricCard
           label="Chiffre livré"
-          value={formatMoney(stats.revenue)}
+          value={Number(stats.revenue) || 0}
+          suffix=" MAD"
           helper={`${stats.totalOrders} commande${stats.totalOrders !== 1 ? 's' : ''} au total`}
           icon={Wallet}
           tone="emerald"
         />
         <MetricCard
           label="Commandes ouvertes"
-          value={stats.openOrders}
+          value={Number(stats.openOrders) || 0}
           helper={`${formatMoney(stats.openValue)} à confirmer ou livrer`}
           icon={ShoppingBag}
           tone="orange"
@@ -216,38 +232,38 @@ export default function AdminDashboard() {
         />
         <MetricCard
           label="Promotions"
-          value={stats.withDiscount}
+          value={Number(stats.withDiscount) || 0}
           helper={`${stats.outOfStock} produit${stats.outOfStock !== 1 ? 's' : ''} en rupture`}
           icon={BadgePercent}
           tone="pink"
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <MetricCard
           label="Vues produits"
-          value={analyticsCounts.product_view || 0}
+          value={Number(analyticsCounts.product_view) || 0}
           helper="30 derniers jours"
           icon={Activity}
           tone="primary"
         />
         <MetricCard
           label="Ajouts panier"
-          value={analyticsCounts.add_to_cart || 0}
+          value={Number(analyticsCounts.add_to_cart) || 0}
           helper={`${analyticsCounts.wishlist_add || 0} ajout(s) favoris`}
           icon={MousePointerClick}
           tone="emerald"
         />
         <MetricCard
           label="WhatsApp"
-          value={analyticsCounts.whatsapp_checkout || 0}
+          value={Number(analyticsCounts.whatsapp_checkout) || 0}
           helper="Clics de commande"
           icon={MessageCircle}
           tone="orange"
         />
         <MetricCard
           label="Recherches"
-          value={(analyticsCounts.search || 0) + (analyticsCounts.empty_search || 0)}
+          value={(Number(analyticsCounts.search) || 0) + (Number(analyticsCounts.empty_search) || 0)}
           helper={`${analyticsCounts.empty_search || 0} sans résultat`}
           icon={Search}
           tone="slate"
@@ -257,7 +273,7 @@ export default function AdminDashboard() {
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Panel title="Commandes récentes">
           {stats.recentOrders.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-white/10 py-10 text-center text-sm text-slate-500">
+            <div className="rounded-2xl border border-dashed border-white/10 py-10 text-center text-sm text-slate-500">
               Aucune commande pour le moment.
             </div>
           ) : (
@@ -290,7 +306,7 @@ export default function AdminDashboard() {
               { label: 'Masqués', value: stats.inactive, icon: EyeOff, color: 'text-slate-300' },
               { label: 'Rupture', value: stats.outOfStock, icon: Package, color: 'text-orange-300' },
             ].map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="rounded-lg border border-white/10 bg-[#111a30]/70 p-3 text-center">
+              <div key={label} className="rounded-2xl border border-white/10 bg-[#111a30]/70 p-3 text-center">
                 <Icon className={`mx-auto h-4 w-4 ${color}`} />
                 <p className="mt-2 text-xl font-extrabold text-white">{value}</p>
                 <p className="mt-0.5 text-xs text-slate-500">{label}</p>
@@ -362,7 +378,7 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-          <div className="mt-4 flex items-center gap-2 rounded-lg border border-white/10 bg-[#111a30]/70 p-3 text-sm text-slate-400">
+          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-[#111a30]/70 p-3 text-sm text-slate-400">
             <TrendingUp className="h-4 w-4 text-emerald-300" />
             Les commandes ouvertes représentent {formatMoney(stats.openValue)}.
           </div>
@@ -372,7 +388,7 @@ export default function AdminDashboard() {
       <Panel title="Engagement boutique">
         <div className="grid gap-4 lg:grid-cols-2">
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Produits les plus consultés</p>
+            <p className="mb-3 text-xs font-semibold tracking-normal text-slate-500">Produits les plus consultés</p>
             {(analytics?.topProducts || []).length === 0 ? (
               <p className="rounded-lg border border-white/8 bg-[#111a30]/70 p-4 text-sm text-slate-500">
                 Pas encore assez de données.
@@ -389,7 +405,7 @@ export default function AdminDashboard() {
             )}
           </div>
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Recherches fréquentes</p>
+            <p className="mb-3 text-xs font-semibold tracking-normal text-slate-500">Recherches fréquentes</p>
             {(analytics?.topSearches || []).length === 0 ? (
               <p className="rounded-lg border border-white/8 bg-[#111a30]/70 p-4 text-sm text-slate-500">
                 Aucune recherche enregistrée.

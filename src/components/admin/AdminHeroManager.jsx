@@ -202,7 +202,7 @@ export default function AdminHeroManager() {
           <MonitorSmartphone className="w-4 h-4 text-primary" />
           Aperçu boutique
         </h3>
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#071326]">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0a0d14]">
           <div className="grid min-h-[260px] gap-4 p-5 sm:grid-cols-[1fr_220px] sm:items-center">
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-wide text-primary">{storeBrand.name}</p>
