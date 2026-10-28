@@ -278,7 +278,7 @@ export default function ProductDetail() {
                     <button
                       type="button"
                       onClick={() => setLightboxOpen(true)}
-                      className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-background/85 shadow-sm backdrop-blur transition-colors hover:bg-background"
+                      className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
                       aria-label="Agrandir l'image"
                     >
                       <Maximize2 className="h-4 w-4" />
@@ -289,14 +289,14 @@ export default function ProductDetail() {
                     <>
                       <button
                         onClick={prevImage}
-                        className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/85 shadow-sm backdrop-blur transition-colors hover:bg-background"
+                        className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
                         aria-label="Image précédente"
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </button>
                       <button
                         onClick={nextImage}
-                        className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/85 shadow-sm backdrop-blur transition-colors hover:bg-background"
+                        className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
                         aria-label="Image suivante"
                       >
                         <ChevronRight className="h-5 w-5" />
@@ -404,7 +404,7 @@ export default function ProductDetail() {
                           onClick={() => selectColor(color, colorIndex)}
                           title={color.name}
                           aria-label={`Choisir la couleur ${color.name}`}
-                          className={`h-9 w-9 rounded-full ring-1 ring-inset ring-black/10 transition ${
+                          className={`h-9 w-9 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/30 transition ${
                             selectedColor?.name === color.name
                               ? 'outline outline-2 outline-offset-2 outline-foreground'
                               : 'hover:scale-105'

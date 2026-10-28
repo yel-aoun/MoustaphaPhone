@@ -98,7 +98,7 @@ function OrderRow({ order, onStatusChange, onDelete, onOpen }) {
           <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Produits commandés</p>
           {(order.items || []).map((item, i) => (
             <div key={i} className="flex items-center justify-between text-xs text-slate-300">
-              <span className="line-clamp-1 flex-1">{item.name}</span>
+              <span className="line-clamp-1 flex-1">{item.name}{item.selectedColor ? ` · ${item.selectedColor}` : ''}</span>
               <span className="shrink-0 ml-4 text-slate-400">
                 ×{item.quantity} — {(item.price * item.quantity).toLocaleString('fr-MA')} DH
               </span>

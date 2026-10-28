@@ -250,7 +250,7 @@ export default function Cart() {
                               onClick={() => updateVariant?.(itemKey, color, catalogProduct)}
                               title={color.name}
                               aria-label={`Choisir ${color.name}`}
-                              className={`h-5 w-5 rounded-full ring-1 ring-inset ring-black/10 transition ${
+                              className={`h-5 w-5 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/30 transition ${
                                 getCartItemKey({ id: item.id, selectedColor: color.name, selectedColorHex: color.hex }) === itemKey
                                   ? 'outline outline-2 outline-offset-2 outline-foreground'
                                   : ''

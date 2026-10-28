@@ -7,6 +7,8 @@ import { useCart } from '@/lib/cartStore';
 import { cloudinaryImage, productImageSrcSet } from '@/lib/images';
 import { formatMoney, getProductPath } from '@/lib/products';
 import { trackProductEvent } from '@/lib/storeEvents';
+import { getImageForColor } from '@/lib/productOptions';
+import { AnimatePresence, motion } from 'framer-motion';
 import TiltCard from '@/components/store/fx/TiltCard';
 import { trackSpotlight } from '@/components/store/fx/spotlight';
 
@@ -19,6 +21,7 @@ const BADGE_LABELS = {
 
 export default function ProductCard({ product, onAddToCart, imagePriority = false }) {
   const [added, setAdded] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const { wishlist, toggleWishlist } = useWishlist();
   const { cart } = useCart();
   const isWishlisted = wishlist.some((i) => i.id === product.id);
@@ -39,15 +42,25 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
       ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
       : null;
 
+  const addWithColor = (color) => {
+    const item = color
+      ? { ...product, selectedColor: color.name, selectedColorHex: color.hex, image_url: getImageForColor(product, color) || product.image_url }
+      : product;
+    onAddToCart?.(item);
+    trackProductEvent('add_to_cart', product, { source: 'product_card', color: color?.name });
+    setAdded(true);
+    setPickerOpen(false);
+    showCartIsland(item);
+    setTimeout(() => setAdded(false), 1400);
+  };
+
   const handleAdd = (event) => {
     event.preventDefault();
     event.stopPropagation();
     if (isOutOfStock) return;
-    onAddToCart?.(product);
-    trackProductEvent('add_to_cart', product, { source: 'product_card' });
-    setAdded(true);
-    showCartIsland(product);
-    setTimeout(() => setAdded(false), 1400);
+    // Several colors: let the customer choose so the order says which one
+    if (colors.length > 1) { setPickerOpen((v) => !v); return; }
+    addWithColor(colors[0] || null);
   };
 
   const handleWishlist = (event) => {
@@ -76,8 +89,8 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
             }`}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-            <Package className="h-10 w-10 opacity-30" />
+          <div className="flex h-full w-full items-center justify-center text-zinc-400">
+            <Package className="h-10 w-10" />
           </div>
         )}
 
@@ -85,8 +98,8 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
           type="button"
           onClick={handleWishlist}
           aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-          className={`absolute right-3 top-3 z-[2] flex h-8 w-8 items-center justify-center rounded-full bg-background/90 transition-all active:scale-90 ${
-            isWishlisted ? 'text-primary' : 'text-muted-foreground hover:text-foreground md:opacity-0 md:group-hover:opacity-100'
+          className={`absolute right-3 top-3 z-[2] flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-all active:scale-90 ${
+            isWishlisted ? 'text-primary' : 'text-zinc-500 hover:text-zinc-900 md:opacity-0 md:group-hover:opacity-100'
           }`}
         >
           <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
@@ -106,7 +119,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
               <span
                 key={c.name}
                 title={c.name}
-                className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-black/10"
+                className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/30"
                 style={{ backgroundColor: c.hex }}
               />
             ))}
@@ -125,9 +138,38 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
             )}
           </div>
           {!isOutOfStock && (
+            <div className="relative shrink-0" onMouseLeave={() => setPickerOpen(false)}>
+            <AnimatePresence>
+              {pickerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.9 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  className="liquid-glass absolute bottom-11 right-0 z-20 w-max max-w-[220px] rounded-2xl p-2"
+                  onClick={(event) => { event.preventDefault(); event.stopPropagation(); }}
+                >
+                  <p className="px-1 pb-1.5 text-[11px] font-medium text-muted-foreground">Choisir la couleur</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {colors.map((color) => (
+                      <button
+                        key={color.name}
+                        type="button"
+                        title={color.name}
+                        aria-label={`Ajouter en ${color.name}`}
+                        onClick={(event) => { event.preventDefault(); event.stopPropagation(); addWithColor(color); }}
+                        className="h-7 w-7 rounded-full ring-1 ring-inset ring-black/15 dark:ring-white/30 transition-transform hover:scale-110 active:scale-95"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <button
               type="button"
               onClick={handleAdd}
+              aria-expanded={colors.length > 1 ? pickerOpen : undefined}
               aria-label={`Ajouter ${product.name} au panier`}
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all active:scale-90 ${
                 added || inCart
@@ -137,6 +179,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
             >
               {added || inCart ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             </button>
+            </div>
           )}
         </div>
       </div>
