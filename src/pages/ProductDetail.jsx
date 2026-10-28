@@ -164,6 +164,23 @@ export default function ProductDetail() {
     );
   };
 
+  useEffect(() => {
+    if (!lightboxOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (event) => {
+      if (event.key === 'Escape') setLightboxOpen(false);
+      if (event.key === 'ArrowLeft' && images.length > 1) selectImage((activeImage - 1 + images.length) % images.length);
+      if (event.key === 'ArrowRight' && images.length > 1) selectImage((activeImage + 1) % images.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightboxOpen, activeImage, images.length]);
+
   const prevImage = () => selectImage((activeImage - 1 + images.length) % images.length);
   const nextImage = () => selectImage((activeImage + 1) % images.length);
 
@@ -517,11 +534,17 @@ export default function ProductDetail() {
       </div>
 
       {lightboxOpen && activeSrc && (
-        <div className="fixed inset-0 z-50 bg-black/92 p-4 text-white" role="dialog" aria-modal="true">
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 p-4 text-white backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image agrandie"
+          onClick={(event) => { if (event.target === event.currentTarget) setLightboxOpen(false); }}
+        >
           <button
             type="button"
             onClick={() => setLightboxOpen(false)}
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20"
+            className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-zinc-900 shadow-lg transition-transform hover:scale-105 active:scale-95"
             aria-label="Fermer l'image"
           >
             <X className="h-5 w-5" />
@@ -546,7 +569,10 @@ export default function ProductDetail() {
               </button>
             </>
           )}
-          <div className="flex h-full flex-col items-center justify-center gap-4">
+          <div
+            className="flex h-full flex-col items-center justify-center gap-4"
+            onClick={(event) => { if (event.target === event.currentTarget) setLightboxOpen(false); }}
+          >
             <img
               src={cloudinaryImage(activeSrc, { width: 1200 })}
               alt={product?.name || ''}
