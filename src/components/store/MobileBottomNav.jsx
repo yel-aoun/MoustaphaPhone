@@ -1,52 +1,58 @@
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Heart, Home, LayoutGrid, Search, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/lib/cartStore';
 import { useWishlist } from '@/lib/wishlistStore';
 import { OPEN_SEARCH_EVENT } from '@/components/store/Header';
 
-const itemClass = (active) =>
-  `relative flex min-w-0 flex-col items-center gap-1 py-1.5 text-[10px] font-medium transition-colors ${
-    active ? 'text-foreground' : 'text-muted-foreground'
-  }`;
-
 export default function MobileBottomNav({ onWishlistOpen }) {
+  const { pathname } = useLocation();
   const { totalItems } = useCart();
   const { totalWishlist } = useWishlist();
 
-  const openSearch = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    window.dispatchEvent(new Event(OPEN_SEARCH_EVENT));
-  };
+  const tabs = [
+    { key: 'home', label: 'Accueil', icon: Home, to: '/', active: pathname === '/' },
+    { key: 'shop', label: 'Boutique', icon: LayoutGrid, to: '/boutique', active: pathname === '/boutique' || pathname.startsWith('/category/') },
+    { key: 'search', label: 'Recherche', icon: Search, onClick: () => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT)) },
+    { key: 'fav', label: 'Favoris', icon: Heart, onClick: onWishlistOpen, badge: totalWishlist > 0 ? '' : null },
+    { key: 'cart', label: 'Panier', icon: ShoppingBag, to: '/panier', active: pathname === '/panier', badge: totalItems > 0 ? totalItems : null },
+  ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/85 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
-      <div className="grid grid-cols-5">
-        <NavLink to="/" end className={({ isActive }) => itemClass(isActive)}>
-          <Home className="h-[22px] w-[22px]" strokeWidth={1.75} />
-          Accueil
-        </NavLink>
-        <NavLink to="/boutique" className={({ isActive }) => itemClass(isActive)}>
-          <LayoutGrid className="h-[22px] w-[22px]" strokeWidth={1.75} />
-          Boutique
-        </NavLink>
-        <button type="button" onClick={openSearch} className={itemClass(false)}>
-          <Search className="h-[22px] w-[22px]" strokeWidth={1.75} />
-          Recherche
-        </button>
-        <button type="button" onClick={onWishlistOpen} className={itemClass(false)}>
-          <Heart className="h-[22px] w-[22px]" strokeWidth={1.75} />
-          Favoris
-          {totalWishlist > 0 && <span className="absolute right-[30%] top-1 h-2 w-2 rounded-full bg-primary" />}
-        </button>
-        <NavLink to="/panier" className={({ isActive }) => itemClass(isActive)}>
-          <ShoppingBag className="h-[22px] w-[22px]" strokeWidth={1.75} />
-          Panier
-          {totalItems > 0 && (
-            <span className="absolute right-[24%] top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 text-[9px] font-semibold text-background">
-              {totalItems}
-            </span>
-          )}
-        </NavLink>
+    <nav className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 md:hidden">
+      <div className="liquid-glass grid grid-cols-5 rounded-[26px] p-1.5">
+        {tabs.map(({ key, label, icon: Icon, to, onClick, active, badge }) => {
+          const content = (
+            <>
+              {active && (
+                <motion.span
+                  layoutId="tab-bubble"
+                  className="absolute inset-0 rounded-[20px] bg-foreground"
+                  transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+                />
+              )}
+              <span className="relative">
+                <Icon className="h-5 w-5" strokeWidth={1.8} />
+                {badge !== null && badge !== undefined && (
+                  <span className={`absolute -right-2.5 -top-1.5 flex min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold ${
+                    badge === '' ? 'h-2 w-2 min-w-0 bg-primary p-0' : 'h-4 bg-primary text-primary-foreground'
+                  }`}>
+                    {badge}
+                  </span>
+                )}
+              </span>
+              <span className="relative text-[10px] font-medium">{label}</span>
+            </>
+          );
+          const className = `relative flex flex-col items-center gap-0.5 rounded-[20px] py-1.5 transition-colors ${
+            active ? 'text-background' : 'text-muted-foreground'
+          }`;
+          return to ? (
+            <Link key={key} to={to} className={className} aria-current={active ? 'page' : undefined}>{content}</Link>
+          ) : (
+            <button key={key} type="button" onClick={onClick} className={className}>{content}</button>
+          );
+        })}
       </div>
     </nav>
   );

@@ -26,6 +26,7 @@ import { base44 } from '@/api/base44Client';
 import StoreLayout from '@/components/store/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
 import DeliveryTimeline from '@/components/store/DeliveryTimeline';
+import { showCartIsland } from '@/components/store/CartIsland';
 import RecentlyViewedSection from '@/components/store/RecentlyViewedSection';
 import { useCart } from '@/lib/cartStore';
 import { useWishlist } from '@/lib/wishlistStore';
@@ -139,9 +140,7 @@ export default function ProductDetail() {
       });
     }
     trackProductEvent('add_to_cart', product, { source: 'product_page', quantity: qty });
-    toast.success(`${product.name} ajouté au panier`, {
-      action: { label: 'Voir le panier', onClick: () => navigate('/panier') },
-    });
+    showCartIsland({ ...product, image_url: selectedColorImageSrc || product.image_url }, qty);
   };
 
   const handleWhatsApp = () => {
@@ -573,7 +572,7 @@ export default function ProductDetail() {
       )}
 
       {product && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl md:hidden">
+        <div className="liquid-glass fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 rounded-[26px] px-3 pb-3 pt-2.5 md:hidden">
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold text-muted-foreground">{product.name}</p>

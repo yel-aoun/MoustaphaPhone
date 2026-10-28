@@ -9,9 +9,9 @@ import HeroSlider from '@/components/store/HeroSlider';
 import CategoryShowcase from '@/components/store/CategoryShowcase';
 import FeaturedSection from '@/components/store/FeaturedSection';
 import BrandStrip from '@/components/store/BrandStrip';
-import TrustBadges from '@/components/store/TrustBadges';
 import RecentlyViewedSection from '@/components/store/RecentlyViewedSection';
 import HowItWorks from '@/components/store/HowItWorks';
+import ExperienceBento from '@/components/store/ExperienceBento';
 import TechTicker from '@/components/store/fx/TechTicker';
 import CircuitBackground from '@/components/store/fx/CircuitBackground';
 import Reveal from '@/components/store/fx/Reveal';
@@ -51,7 +51,7 @@ export default function Home() {
   }, [onSale, newest, activeProducts]);
 
   return (
-    <StoreLayout>
+    <StoreLayout overlapHeader>
       <HeroSlider products={heroProducts} heroConfig={heroConfig} totalProducts={activeProducts.length} />
       <TechTicker />
 
@@ -62,6 +62,8 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <ExperienceBento products={activeProducts} />
 
       <CategoryShowcase products={activeProducts} />
 
@@ -117,7 +119,6 @@ export default function Home() {
         <RecentlyViewedSection products={activeProducts} onAddToCart={addToCart} />
       </div>
 
-      <TrustBadges />
     </StoreLayout>
   );
 }

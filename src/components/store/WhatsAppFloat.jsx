@@ -15,7 +15,7 @@ export default function WhatsAppFloat() {
       animate={{ scale: 1 }}
       transition={{ type: 'spring', delay: 0.5, damping: 15 }}
       aria-label="Contacter sur WhatsApp"
-      className="fixed bottom-20 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/15 transition-transform hover:scale-105 md:bottom-6 md:right-6 md:h-14 md:w-14"
+      className="fixed bottom-24 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/15 transition-transform hover:scale-105 md:bottom-6 md:right-6 md:h-14 md:w-14"
     >
       <MessageCircle className="h-6 w-6" />
     </motion.a>

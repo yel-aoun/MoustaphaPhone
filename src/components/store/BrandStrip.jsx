@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 // Brands are detected from product names; each keyword is something customers search for.
-const BRANDS = [
+export const BRANDS = [
   { name: 'Apple', keywords: ['iphone', 'airpods', 'ipad', 'apple', 'magsafe', 'macbook'] },
   { name: 'Samsung', keywords: ['samsung', 'galaxy'] },
   { name: 'Xiaomi', keywords: ['xiaomi', 'redmi', 'poco'] },

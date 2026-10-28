@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Check, Heart, Package, Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { showCartIsland } from '@/components/store/CartIsland';
 import { useWishlist } from '@/lib/wishlistStore';
 import { useCart } from '@/lib/cartStore';
 import { cloudinaryImage, productImageSrcSet } from '@/lib/images';
 import { formatMoney, getProductPath } from '@/lib/products';
 import { trackProductEvent } from '@/lib/storeEvents';
 import TiltCard from '@/components/store/fx/TiltCard';
+import { trackSpotlight } from '@/components/store/fx/spotlight';
 
 const BADGE_LABELS = {
   best_seller: 'Best seller',
@@ -18,7 +19,6 @@ const BADGE_LABELS = {
 
 export default function ProductCard({ product, onAddToCart, imagePriority = false }) {
   const [added, setAdded] = useState(false);
-  const navigate = useNavigate();
   const { wishlist, toggleWishlist } = useWishlist();
   const { cart } = useCart();
   const isWishlisted = wishlist.some((i) => i.id === product.id);
@@ -46,9 +46,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
     onAddToCart?.(product);
     trackProductEvent('add_to_cart', product, { source: 'product_card' });
     setAdded(true);
-    toast.success(`${product.name} ajouté au panier`, {
-      action: { label: 'Voir le panier', onClick: () => navigate('/panier') },
-    });
+    showCartIsland(product);
     setTimeout(() => setAdded(false), 1400);
   };
 
@@ -62,7 +60,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
   return (
     <Link to={path} className="group flex h-full flex-col" aria-label={product.name}>
       <TiltCard className="rounded-2xl" max={6} glare={false}>
-      <div className="photo-well relative aspect-[4/5] overflow-hidden rounded-2xl">
+      <div className="photo-well spotlight relative aspect-[4/5] overflow-hidden rounded-2xl" onPointerMove={trackSpotlight}>
         {/* Light sweep on hover */}
         <span className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-1/3 -translate-x-[120%] bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:animate-shine" />
         {product.image_url ? (

@@ -380,7 +380,7 @@ export default function Cart() {
       </div>
 
       {/* Mobile sticky action */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl lg:hidden">
+      <div className="liquid-glass fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 rounded-[26px] px-3 pb-3 pt-2.5 lg:hidden">
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Total</span>
           <span className="font-semibold text-foreground">{formatMoney(totalPayable)}</span>

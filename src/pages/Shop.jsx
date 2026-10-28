@@ -8,6 +8,7 @@ import { useSeo } from '@/lib/seo';
 import { trackEvent } from '@/lib/storeEvents';
 import { useCategories } from '@/hooks/useCategories';
 import { slugify } from '@/lib/products';
+import { productMatchesQuery } from '@/lib/search';
 import { storeBrand } from '@/lib/brand';
 import StoreLayout, { useStoreProducts } from '@/components/store/StoreLayout';
 import ProductGrid from '@/components/store/ProductGrid';
@@ -71,13 +72,9 @@ export default function Shop() {
   }, [activeProducts]);
 
   const sorted = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
     const filtered = activeProducts.filter((p) => {
       const matchesCategory = activeCategory === 'Tous' || p.category === activeCategory;
-      const matchesSearch = !q ||
-        p.name?.toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q);
+      const matchesSearch = productMatchesQuery(p, searchQuery);
       const matchesMin = minPrice === '' || p.price >= Number(minPrice);
       const matchesMax = maxPrice === '' || p.price <= Number(maxPrice);
       const matchesSale = !saleOnly || (p.original_price && p.original_price > p.price);
@@ -139,11 +136,11 @@ export default function Shop() {
   const BannerIcon = ActiveIcon ? ICON_COMPONENTS[ActiveIcon] : null;
 
   return (
-    <StoreLayout>
+    <StoreLayout overlapHeader>
       {/* Page banner */}
       <section className="relative overflow-hidden border-b border-border bg-secondary">
         <CircuitBackground className="text-foreground [mask-image:linear-gradient(90deg,transparent_35%,#000_75%)]" />
-        <div className="container-store relative py-10 sm:py-14">
+        <div className="container-store relative pb-10 pt-24 sm:pb-14 sm:pt-28">
           <nav className="mb-3 text-xs text-muted-foreground">
             <Link to="/" className="hover:text-foreground">Accueil</Link>
             <span className="mx-1.5">/</span>
@@ -175,8 +172,8 @@ export default function Shop() {
 
       <div className="container-store pb-16 pt-6">
         {/* Toolbar */}
-        <div className="sticky top-14 z-30 -mx-4 bg-background/85 px-4 py-3 backdrop-blur-xl sm:top-16 sm:mx-0 sm:px-0">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="sticky top-[76px] z-30 py-2">
+          <div className="liquid-glass flex flex-col gap-2 rounded-[26px] p-2 lg:flex-row lg:items-center">
             <div className="relative lg:w-80">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -192,7 +189,7 @@ export default function Shop() {
               )}
             </div>
 
-            <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-1 lg:px-0">
+            <div className="no-scrollbar flex items-center gap-2 overflow-x-auto lg:flex-1">
               <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
                 <PopoverTrigger asChild>
                   <button type="button" className={pill(activeCategory !== 'Tous')}>

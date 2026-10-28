@@ -82,8 +82,11 @@ export default function HeroSlider({ products = [], heroConfig, totalProducts = 
     <section className="relative overflow-hidden bg-secondary">
       <CircuitBackground className="text-foreground [mask-image:linear-gradient(90deg,transparent_30%,#000_70%)] max-lg:[mask-image:linear-gradient(180deg,#000_30%,transparent_70%)]" />
       <div className="pointer-events-none absolute -right-40 top-1/2 h-[560px] w-[560px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.16),transparent_65%)]" />
+      {/* Slow aurora glows */}
+      <div className="pointer-events-none absolute -left-32 top-10 h-80 w-80 animate-aurora rounded-full bg-sky-300/25 blur-3xl dark:bg-sky-500/10" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-96 animate-aurora rounded-full bg-indigo-300/20 blur-3xl [animation-delay:-9s] dark:bg-indigo-500/10" />
 
-      <div className="container-store relative grid items-center gap-8 pb-12 pt-10 sm:pt-14 lg:grid-cols-[1fr_1.05fr] lg:gap-6 lg:pb-16">
+      <div className="container-store relative grid items-center gap-8 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1fr_1.05fr] lg:gap-6 lg:pb-16">
         {/* Copy */}
         <div className="order-2 text-center lg:order-1 lg:text-left">
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur">

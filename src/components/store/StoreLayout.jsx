@@ -11,6 +11,7 @@ import MobileBottomNav from '@/components/store/MobileBottomNav';
 import WishlistSidebar from '@/components/store/WishlistSidebar';
 import WhatsAppFloat from '@/components/store/WhatsAppFloat';
 import ComparePanel from '@/components/store/ComparePanel';
+import CartIsland from '@/components/store/CartIsland';
 
 export function useStoreProducts() {
   const query = useQuery({
@@ -22,7 +23,7 @@ export function useStoreProducts() {
 }
 
 // Shared shell for every storefront page: header, footer, mobile tab bar and global drawers.
-export default function StoreLayout({ children, hideTabBar = false, hideWhatsApp = false }) {
+export default function StoreLayout({ children, hideTabBar = false, hideWhatsApp = false, overlapHeader = false }) {
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const { activeProducts } = useStoreProducts();
   const { cart, addToCart, totalPrice } = useCart();
@@ -39,7 +40,7 @@ export default function StoreLayout({ children, hideTabBar = false, hideWhatsApp
         initial={reduce ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className={`flex-1 ${hideTabBar ? 'pb-28 md:pb-0' : 'pb-20 md:pb-0'}`}
+        className={`flex-1 ${overlapHeader ? '' : 'pt-[76px]'} ${hideTabBar ? 'pb-28 md:pb-0' : 'pb-24 md:pb-0'}`}
       >
         {children}
       </motion.main>
@@ -48,6 +49,7 @@ export default function StoreLayout({ children, hideTabBar = false, hideWhatsApp
       {!hideTabBar && <MobileBottomNav onWishlistOpen={() => setWishlistOpen(true)} />}
       {!hideWhatsApp && <WhatsAppFloat cart={cart} totalPrice={totalPrice} />}
       <ComparePanel products={activeProducts} />
+      <CartIsland />
       <WishlistSidebar
         isOpen={wishlistOpen}
         onClose={() => setWishlistOpen(false)}

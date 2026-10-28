@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, Menu, Moon, Search, ShoppingBag, Sun, X } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
@@ -9,15 +9,18 @@ import { useWishlist } from '@/lib/wishlistStore';
 import { slugify } from '@/lib/products';
 import { ICON_COMPONENTS } from '@/lib/categoryIcons';
 import BrandLogo from '@/components/brand/BrandLogo';
-import SearchSuggestions from '@/components/store/SearchSuggestions';
+import SpotlightSearch from '@/components/store/SpotlightSearch';
 
 export const OPEN_SEARCH_EVENT = 'client-store-open-search';
 
-const navLinkClass = ({ isActive }) =>
-  `text-[13px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`;
+const NAV = [
+  { to: '/', label: 'Accueil', match: (path, search) => path === '/' },
+  { to: '/boutique', label: 'Boutique', match: (path, search) => (path === '/boutique' || path.startsWith('/category/')) && !search.includes('sale=1') },
+  { to: '/boutique?sale=1', label: 'Promotions', dot: true, match: (path, search) => search.includes('sale=1') },
+  { to: '/track-order', label: 'Suivi', match: (path) => path === '/track-order' },
+];
 
 export default function Header({ products = [], onWishlistOpen }) {
-  const navigate = useNavigate();
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
   const { data: categories = [] } = useCategories();
@@ -25,19 +28,36 @@ export default function Header({ products = [], onWishlistOpen }) {
   const { totalWishlist } = useWishlist();
 
   const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const inputRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || '');
 
   useEffect(() => {
-    const open = () => setSearchOpen(true);
-    window.addEventListener(OPEN_SEARCH_EVENT, open);
-    return () => window.removeEventListener(OPEN_SEARCH_EVENT, open);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   useEffect(() => {
-    if (searchOpen) window.setTimeout(() => inputRef.current?.focus(), 50);
-  }, [searchOpen]);
+    const open = () => setSearchOpen(true);
+    const onKey = (event) => {
+      const typing = /input|textarea|select/i.test(event.target?.tagName || '') || event.target?.isContentEditable;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen((v) => !v);
+      } else if (event.key === '/' && !typing) {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener(OPEN_SEARCH_EVENT, open);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener(OPEN_SEARCH_EVENT, open);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, []);
 
   // Close overlays whenever the route changes
   useEffect(() => {
@@ -45,31 +65,18 @@ export default function Header({ products = [], onWishlistOpen }) {
     setMenuOpen(false);
   }, [location.pathname, location.search]);
 
-  useEffect(() => {
-    if (!searchOpen) return undefined;
-    const onKey = (event) => event.key === 'Escape' && setSearchOpen(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [searchOpen]);
-
-  const submitSearch = (event) => {
-    event.preventDefault();
-    const value = query.trim();
-    navigate(value ? `/boutique?q=${encodeURIComponent(value)}` : '/boutique');
-    setQuery('');
-  };
+  const iconButton = 'relative flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06]';
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-xl backdrop-saturate-150">
-        <div className="container-store flex h-14 items-center justify-between gap-4 sm:h-16">
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5">
+        <div
+          className={`liquid-glass mx-auto flex h-14 max-w-[1200px] items-center justify-between gap-3 rounded-full pl-4 pr-2 transition-all duration-300 ${
+            scrolled ? 'sm:max-w-[1000px]' : ''
+          }`}
+        >
           <div className="flex min-w-0 items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              className="-ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground md:hidden"
-              aria-label="Menu"
-            >
+            <button type="button" onClick={() => setMenuOpen(true)} className={`${iconButton} -ml-2 md:hidden`} aria-label="Menu">
               <Menu className="h-5 w-5" />
             </button>
             <Link to="/" aria-label="Accueil" className="min-w-0">
@@ -77,113 +84,73 @@ export default function Header({ products = [], onWishlistOpen }) {
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-7 md:flex">
-            <NavLink to="/" end className={navLinkClass}>Accueil</NavLink>
-            <NavLink to="/boutique" end className={({ isActive }) => navLinkClass({ isActive: isActive && !location.search.includes('sale=1') })}>Boutique</NavLink>
-            <Link to="/boutique?sale=1" className={navLinkClass({ isActive: location.search.includes('sale=1') })}>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 animate-blink rounded-full bg-deal" />
-                Promotions
-              </span>
-            </Link>
-            <NavLink to="/track-order" className={navLinkClass}>Suivi de commande</NavLink>
+          <nav className="hidden items-center rounded-full p-1 md:flex">
+            {NAV.map(({ to, label, dot, match }) => {
+              const active = match(location.pathname, location.search);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`relative rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${active ? 'text-background' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="nav-pill"
+                      className="absolute inset-0 rounded-full bg-foreground"
+                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    />
+                  )}
+                  <span className="relative flex items-center gap-1.5">
+                    {dot && <span className="h-1.5 w-1.5 animate-blink rounded-full bg-deal" />}
+                    {label}
+                  </span>
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex shrink-0 items-center gap-0.5">
             <button
               type="button"
-              onClick={() => setSearchOpen((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary"
+              onClick={() => setSearchOpen(true)}
+              className="hidden h-10 items-center gap-2 rounded-full bg-foreground/[0.05] pl-3.5 pr-2 text-sm text-muted-foreground transition-colors hover:bg-foreground/[0.09] lg:flex"
               aria-label="Rechercher"
             >
-              {searchOpen ? <X className="h-[18px] w-[18px]" /> : <Search className="h-[18px] w-[18px]" />}
+              <Search className="h-4 w-4" />
+              <span className="pr-6">Rechercher</span>
+              <kbd className="rounded-md border border-foreground/10 bg-background/70 px-1.5 py-0.5 text-[10px] font-medium">{isMac ? '⌘K' : 'Ctrl K'}</kbd>
             </button>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="hidden h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary sm:flex"
-              aria-label="Changer le thème"
-            >
-              {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+            <button type="button" onClick={() => setSearchOpen(true)} className={`${iconButton} lg:hidden`} aria-label="Rechercher">
+              <Search className="h-[18px] w-[18px]" />
             </button>
-            <button
-              type="button"
-              onClick={onWishlistOpen}
-              className="relative hidden h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary sm:flex"
-              aria-label="Mes favoris"
-            >
-              <Heart className="h-[18px] w-[18px]" />
-              {totalWishlist > 0 && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-              )}
-            </button>
-            <Link
-              to="/panier"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary"
-              aria-label="Panier"
-            >
-              <ShoppingBag className="h-[18px] w-[18px]" />
-              {totalItems > 0 && (
-                <motion.span
-                  key={totalItems}
-                  initial={{ scale: 1.8 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 14 }}
-                  className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground"
-                >
-                  {totalItems}
+            <button type="button" onClick={toggleTheme} className={`${iconButton} hidden sm:flex`} aria-label="Changer le thème">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span key={isDark ? 'sun' : 'moon'} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                  {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
                 </motion.span>
-              )}
+              </AnimatePresence>
+            </button>
+            <button type="button" onClick={onWishlistOpen} className={`${iconButton} hidden sm:flex`} aria-label="Mes favoris">
+              <Heart className="h-[18px] w-[18px]" />
+              {totalWishlist > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />}
+            </button>
+            <Link to="/panier" className="relative flex h-10 items-center gap-2 rounded-full bg-foreground pl-3 pr-3.5 text-background transition-transform hover:scale-[1.03] active:scale-95" aria-label="Panier">
+              <ShoppingBag className="h-4 w-4" />
+              <motion.span
+                key={totalItems}
+                initial={{ scale: 1.7 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 14 }}
+                className="text-xs font-semibold tabular-nums"
+              >
+                {totalItems}
+              </motion.span>
             </Link>
           </div>
         </div>
-
-        {/* Search panel */}
-        <AnimatePresence>
-          {searchOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.18 }}
-              className="border-t border-border/70 bg-background"
-            >
-              <form onSubmit={submitSearch} className="container-store py-4">
-                <div className="relative mx-auto max-w-2xl">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    ref={inputRef}
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Rechercher un téléphone, une coque, un chargeur…"
-                    className="h-12 w-full rounded-full bg-secondary pl-12 pr-4 text-[15px] text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
-                  />
-                  <SearchSuggestions
-                    query={query}
-                    products={products}
-                    onCategorySelect={(category) => navigate(`/category/${slugify(category)}`)}
-                    onSelect={() => setSearchOpen(false)}
-                  />
-                </div>
-                {query.trim().length < 2 && categories.length > 0 && (
-                  <div className="mx-auto mt-3 flex max-w-2xl flex-wrap gap-2">
-                    <span className="py-1 text-xs text-muted-foreground">Populaire :</span>
-                    {categories.slice(0, 6).map(({ name }) => (
-                      <Link
-                        key={name}
-                        to={`/category/${slugify(name)}`}
-                        className="rounded-full border border-border px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-                      >
-                        {name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </header>
+
+      <SpotlightSearch open={searchOpen} onClose={() => setSearchOpen(false)} products={products} />
 
       {/* Mobile menu */}
       <AnimatePresence>
