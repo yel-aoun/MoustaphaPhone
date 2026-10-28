@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // Brands are detected from product names; each keyword is something customers search for.
 const BRANDS = [
@@ -19,7 +19,7 @@ const BRANDS = [
   { name: 'Anker', keywords: ['anker'] },
 ];
 
-export default function BrandStrip({ products = [], onSearch }) {
+export default function BrandStrip({ products = [] }) {
   const brands = useMemo(() => {
     const names = products.map((p) => (p.name || '').toLowerCase());
     return BRANDS.map((brand) => {
@@ -35,22 +35,18 @@ export default function BrandStrip({ products = [], onSearch }) {
   if (brands.length === 0) return null;
 
   return (
-    <section className="mb-10">
-      <h2 className="section-title mb-5">Shop par marque</h2>
-      <div className="no-scrollbar -mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 lg:grid-cols-6">
+    <section className="container-store pb-14 sm:pb-20">
+      <h2 className="section-title mb-6">Nos marques</h2>
+      <div className="no-scrollbar -mx-4 flex gap-2.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
         {brands.map(({ name, count, query }) => (
-          <button
+          <Link
             key={name}
-            type="button"
-            onClick={() => onSearch?.(query)}
-            className="group flex min-w-[140px] items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3.5 text-left transition-all hover:border-primary hover:shadow-soft sm:min-w-0"
+            to={`/boutique?q=${encodeURIComponent(query)}`}
+            className="flex shrink-0 items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-foreground"
           >
-            <span>
-              <span className="block text-base font-extrabold tracking-tight text-foreground group-hover:text-primary">{name}</span>
-              <span className="text-[11px] font-medium text-muted-foreground">{count} produit{count > 1 ? 's' : ''}</span>
-            </span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-          </button>
+            {name}
+            <span className="text-xs text-muted-foreground">{count}</span>
+          </Link>
         ))}
       </div>
     </section>

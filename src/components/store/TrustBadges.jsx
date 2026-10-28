@@ -1,28 +1,26 @@
-import { PackageCheck, ShieldCheck, RefreshCcw, Headphones } from 'lucide-react';
+import { Headphones, PackageCheck, RefreshCcw, Wallet } from 'lucide-react';
 
 const BADGES = [
-  { icon: PackageCheck, label: 'Livraison rapide',       sub: 'Partout au Maroc en 2–5 jours' },
-  { icon: ShieldCheck,  label: 'Paiement à la livraison', sub: 'Payez cash à la réception'     },
-  { icon: RefreshCcw,   label: 'Retours faciles',         sub: 'Sous 7 jours, sans conditions' },
-  { icon: Headphones,   label: 'Support 7j/7',            sub: 'Via WhatsApp, réponse rapide'  },
+  { icon: PackageCheck, label: 'Livraison partout au Maroc', sub: 'En 24 à 72h selon votre ville.' },
+  { icon: Wallet,       label: 'Paiement à la livraison',     sub: 'Vous payez en cash à la réception.' },
+  { icon: RefreshCcw,   label: 'Retour sous 7 jours',         sub: 'Produit intact, retour simple.' },
+  { icon: Headphones,   label: 'Conseil sur WhatsApp',        sub: 'Une vraie personne vous répond.' },
 ];
 
 export default function TrustBadges() {
   return (
-    <div className="border-y border-border bg-surface">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-6 px-4 py-8 sm:px-6 lg:grid-cols-4 lg:px-10">
+    <section className="container-store pb-16 sm:pb-24">
+      <div className="grid grid-cols-1 gap-8 border-t border-border pt-12 sm:grid-cols-2 lg:grid-cols-4">
         {BADGES.map(({ icon: Icon, label, sub }) => (
-          <div key={label} className="flex items-center gap-3 px-2">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Icon className="h-6 w-6" strokeWidth={1.75} />
-            </span>
+          <div key={label} className="flex gap-3 sm:flex-col">
+            <Icon className="h-6 w-6 shrink-0 text-primary" strokeWidth={1.5} />
             <div>
-              <p className="text-sm font-extrabold leading-tight text-foreground">{label}</p>
-              <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{sub}</p>
+              <p className="text-sm font-semibold text-foreground">{label}</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{sub}</p>
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

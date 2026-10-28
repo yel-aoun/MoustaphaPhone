@@ -1,76 +1,27 @@
-import { useRef } from 'react';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import ProductCard from './ProductCard';
 
-export default function FeaturedSection({ title, subtitle, products, onAddToCart, onQuickView, onViewAll, highlight = false }) {
-  const scrollRef = useRef(null);
-
-  const scroll = (dir) => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({ left: dir * 260, behavior: 'smooth' });
-  };
-
+export default function FeaturedSection({ title, subtitle, products, onAddToCart, viewAllTo }) {
   if (!products || products.length === 0) return null;
 
   return (
-    <section className={`mb-10 ${highlight ? '-mx-4 bg-primary px-4 py-5 sm:mx-0 sm:rounded-2xl sm:px-5' : ''}`}>
-      {/* Header row */}
-      <div className="mb-4 flex items-end justify-between gap-3">
+    <section className="container-store pb-14 sm:pb-20">
+      <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          {highlight ? (
-            <h2 className="text-xl font-extrabold text-primary-foreground sm:text-2xl">{title}</h2>
-          ) : (
-            <h2 className="section-title">{title}</h2>
-          )}
-          {subtitle && (
-            <p className={`mt-1 text-sm ${highlight ? 'text-primary-foreground/80' : 'pl-4 text-muted-foreground'}`}>{subtitle}</p>
-          )}
+          <h2 className="section-title">{title}</h2>
+          {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {onViewAll && (
-            <button
-              onClick={onViewAll}
-              className={`mr-1 flex items-center gap-1 text-sm font-bold hover:underline underline-offset-4 ${
-                highlight ? 'text-primary-foreground' : 'text-primary'
-              }`}
-            >
-              Voir tout
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
-          <button
-            onClick={() => scroll(-1)}
-            className={`hidden h-9 w-9 items-center justify-center rounded-lg border transition-colors sm:flex ${
-              highlight ? 'border-white/30 text-primary-foreground hover:bg-white/15' : 'border-border bg-card hover:border-primary hover:text-primary'
-            }`}
-            aria-label="Faire defiler vers la gauche"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => scroll(1)}
-            className={`hidden h-9 w-9 items-center justify-center rounded-lg border transition-colors sm:flex ${
-              highlight ? 'border-white/30 text-primary-foreground hover:bg-white/15' : 'border-border bg-card hover:border-primary hover:text-primary'
-            }`}
-            aria-label="Faire defiler vers la droite"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        {viewAllTo && (
+          <Link to={viewAllTo} className="flex shrink-0 items-center text-sm font-medium text-primary hover:underline">
+            Tout voir <ChevronRight className="h-4 w-4" />
+          </Link>
+        )}
       </div>
-
-      {/* Horizontal scroll row */}
-      <div
-        ref={scrollRef}
-        className="no-scrollbar flex snap-x items-stretch gap-3 overflow-x-auto pb-1"
-      >
-        {products.map((product) => (
-          <div key={product.id} className="w-44 shrink-0 snap-start sm:w-52 md:w-56">
-            <ProductCard
-              product={product}
-              onAddToCart={onAddToCart}
-              onQuickView={onQuickView}
-            />
+      <div className="no-scrollbar -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+        {products.slice(0, 8).map((product, index) => (
+          <div key={product.id} className="w-[46vw] max-w-[220px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+            <ProductCard product={product} onAddToCart={onAddToCart} imagePriority={index < 2} />
           </div>
         ))}
       </div>

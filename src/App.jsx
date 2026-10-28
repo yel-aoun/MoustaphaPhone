@@ -12,6 +12,8 @@ import { trackEvent } from '@/lib/storeEvents';
 const Home = lazy(() => import('./pages/Home'));
 const Admin = lazy(() => import('./pages/Admin'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Shop = lazy(() => import('./pages/Shop'));
+const Cart = lazy(() => import('./pages/Cart'));
 const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 
 function RouteTracker() {
@@ -71,7 +73,9 @@ const AuthenticatedApp = () => {
       >
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/category/:categorySlug" element={<Home />} />
+          <Route path="/boutique" element={<Shop />} />
+          <Route path="/category/:categorySlug" element={<Shop />} />
+          <Route path="/panier" element={<Cart />} />
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/admin" element={<Admin />} />

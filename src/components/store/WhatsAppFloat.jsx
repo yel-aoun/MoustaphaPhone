@@ -4,8 +4,7 @@ import { motion } from 'framer-motion';
 import { trackEvent } from '@/lib/storeEvents';
 import { buildWhatsAppLink, storeBrand } from '@/lib/brand';
 
-export default function WhatsAppFloat({ cart = [] }) {
-  const hasCart = Array.isArray(cart) && cart.length > 0;
+export default function WhatsAppFloat() {
   return (
     <motion.a
       href={buildWhatsAppLink(`Bonjour ${storeBrand.name}, j'ai une question.`)}
@@ -15,11 +14,10 @@ export default function WhatsAppFloat({ cart = [] }) {
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ type: 'spring', delay: 0.5, damping: 15 }}
-      className={`fixed right-6 z-40 w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg shadow-green-500/30 transition-colors sm:bottom-6 ${
-        hasCart ? 'bottom-36' : 'bottom-24'
-      }`}
+      aria-label="Contacter sur WhatsApp"
+      className="fixed bottom-20 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/15 transition-transform hover:scale-105 md:bottom-6 md:right-6 md:h-14 md:w-14"
     >
-      <MessageCircle className="w-6 h-6" />
+      <MessageCircle className="h-6 w-6" />
     </motion.a>
   );
 }

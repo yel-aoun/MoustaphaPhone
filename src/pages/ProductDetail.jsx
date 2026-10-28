@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowLeft,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -24,13 +23,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
-import Header from '@/components/store/Header';
-import Footer from '@/components/store/Footer';
+import StoreLayout from '@/components/store/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
-import ProductModal from '@/components/store/ProductModal';
-import CartSidebar from '@/components/store/CartSidebar';
-import WishlistSidebar from '@/components/store/WishlistSidebar';
-import ComparePanel from '@/components/store/ComparePanel';
 import RecentlyViewedSection from '@/components/store/RecentlyViewedSection';
 import { useCart } from '@/lib/cartStore';
 import { useWishlist } from '@/lib/wishlistStore';
@@ -57,14 +51,11 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const [activeImage, setActiveImage] = useState(0);
   const [qty, setQty] = useState(1);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [wishlistOpen, setWishlistOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const touchStart = useRef({ x: 0, y: 0 });
 
-  const { cart, addToCart, removeFromCart, updateQuantity, updateVariant, clearCart, totalItems, totalPrice } = useCart();
-  const { wishlist, removeFromWishlist, totalWishlist, toggleWishlist } = useWishlist();
+  const { addToCart } = useCart();
+  const { wishlist, toggleWishlist } = useWishlist();
   const { compareIds, toggleCompare } = useCompare();
 
   const { data: products = [], isLoading, error } = useQuery({
@@ -114,21 +105,6 @@ export default function ProductDetail() {
   });
 
   useEffect(() => {
-    const update = () => {
-      const header = document.querySelector('header');
-      if (header) {
-        document.documentElement.style.setProperty('--header-h', `${Math.ceil(header.getBoundingClientRect().height)}px`);
-      }
-    };
-    const raf = requestAnimationFrame(update);
-    window.addEventListener('resize', update);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', update);
-    };
-  }, []);
-
-  useEffect(() => {
     if (!product) return;
     setQty(1);
     const firstColor = colors[0] || null;
@@ -150,11 +126,6 @@ export default function ProductDetail() {
       ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
       : null;
 
-  const handleCategorySelect = (category) => {
-    if (category && category !== 'Tous') navigate(`/category/${slugify(category)}`);
-    else navigate('/');
-  };
-
   const handleAdd = () => {
     if (!product || isOutOfStock) return;
     for (let i = 0; i < qty; i++) {
@@ -167,6 +138,9 @@ export default function ProductDetail() {
       });
     }
     trackProductEvent('add_to_cart', product, { source: 'product_page', quantity: qty });
+    toast.success(`${product.name} ajouté au panier`, {
+      action: { label: 'Voir le panier', onClick: () => navigate('/panier') },
+    });
   };
 
   const handleWhatsApp = () => {
@@ -222,35 +196,24 @@ export default function ProductDetail() {
   const shareUrl = encodeURIComponent(productUrl);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header
-        totalItems={totalItems}
-        onCartOpen={() => setCartOpen(true)}
-        totalWishlist={totalWishlist}
-        onWishlistOpen={() => setWishlistOpen(true)}
-        searchQuery=""
-        onSearchChange={(value) => navigate(`/?q=${encodeURIComponent(value)}`)}
-        activeCategory={product?.category || 'Tous'}
-        onCategorySelect={handleCategorySelect}
-        products={products.filter((item) => item.status !== 'inactive')}
-      />
-
-      <main
-        className="mx-auto max-w-7xl px-4 pb-32 sm:px-6 sm:pb-16 lg:px-10"
-        style={{ paddingTop: 'calc(var(--header-h, 160px) + 16px)' }}
-      >
-        <Link
-          to="/"
-          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour au catalogue
-        </Link>
+    <StoreLayout hideTabBar hideWhatsApp>
+      <div className="container-store pb-16 pt-6 sm:pt-10">
+        <nav className="mb-6 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          <Link to="/" className="hover:text-foreground">Accueil</Link>
+          <span>/</span>
+          <Link to="/boutique" className="hover:text-foreground">Boutique</Link>
+          {product?.category && (
+            <>
+              <span>/</span>
+              <Link to={`/category/${slugify(product.category)}`} className="hover:text-foreground">{product.category}</Link>
+            </>
+          )}
+        </nav>
 
         {isLoading ? (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.78fr)]">
             <div>
-              <div className="aspect-square animate-pulse rounded-lg border border-border bg-secondary" />
+              <div className="aspect-square animate-pulse rounded-3xl bg-secondary" />
               <div className="mt-3 flex gap-2">
                 {Array(4).fill(0).map((_, index) => (
                   <div key={index} className="h-20 w-20 animate-pulse rounded-lg bg-secondary" />
@@ -277,9 +240,10 @@ export default function ProductDetail() {
             Impossible de charger le produit. Vérifiez `/api/products` ou `/api/health` sur le domaine Vercel.
           </div>
         ) : !product ? (
-          <div className="rounded-lg border border-dashed border-border bg-secondary/30 p-12 text-center">
+          <div className="rounded-3xl bg-secondary p-12 text-center">
             <Package className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
-            <h1 className="text-2xl font-bold text-foreground">Produit introuvable</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Produit introuvable</h1>
+            <Link to="/boutique" className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground">Retour à la boutique</Link>
             <p className="mt-2 text-sm text-muted-foreground">Ce produit n'est plus disponible ou le lien a changé.</p>
           </div>
         ) : (
@@ -287,7 +251,7 @@ export default function ProductDetail() {
             <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.78fr)]">
               <div className="min-w-0 lg:flex lg:flex-row-reverse lg:items-start lg:gap-3">
                 <div
-                  className="relative aspect-square flex-1 overflow-hidden rounded-lg border border-border bg-white lg:aspect-[4/3]"
+                  className="photo-well relative aspect-square flex-1 overflow-hidden rounded-3xl lg:aspect-[4/3.6]"
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
                 >
@@ -301,7 +265,7 @@ export default function ProductDetail() {
                       decoding="async"
                       fetchPriority="high"
                       onClick={() => setLightboxOpen(true)}
-                      className={`h-full w-full cursor-zoom-in object-contain p-5 ${isOutOfStock ? 'opacity-60' : ''}`}
+                      className={`h-full w-full cursor-zoom-in bg-transparent object-contain p-8 mix-blend-multiply ${isOutOfStock ? 'opacity-60' : ''}`}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-secondary text-muted-foreground">
@@ -362,11 +326,11 @@ export default function ProductDetail() {
                       <button
                         key={image}
                         onClick={() => selectImage(index)}
-                        className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-white transition lg:h-20 lg:w-20 ${
-                          index === activeImage ? 'border-primary shadow-sm' : 'border-border opacity-60 hover:opacity-100'
+                        className={`photo-well h-20 w-20 shrink-0 overflow-hidden rounded-2xl transition lg:h-20 lg:w-20 ${
+                          index === activeImage ? 'ring-2 ring-foreground' : 'opacity-60 hover:opacity-100'
                         }`}
                       >
-                        <img src={cloudinaryImage(image, { width: 160, height: 160, crop: 'pad' })} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain p-1.5" />
+                        <img src={cloudinaryImage(image, { width: 160, height: 160, crop: 'pad' })} alt="" loading="lazy" decoding="async" className="h-full w-full bg-transparent object-contain p-2 mix-blend-multiply" />
                         {getColorForImage(colors, images, index) && (
                           <span className="sr-only">Couleur {getColorForImage(colors, images, index)?.name}</span>
                         )}
@@ -376,49 +340,46 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              <div className="space-y-5 lg:sticky lg:top-[calc(var(--header-h,160px)+16px)] lg:self-start">
+              <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    {product.category && (
-                      <span className="rounded-full border border-border bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                        {product.category}
+                    {isOutOfStock ? (
+                      <span className="text-xs font-semibold text-muted-foreground">Épuisé</span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" /> En stock
                       </span>
                     )}
-                    {isOutOfStock ? (
-                      <span className="rounded-full bg-orange-500/12 px-3 py-1 text-xs font-bold text-orange-500">Rupture</span>
-                    ) : (
-                      <span className="rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-bold text-emerald-600">En stock</span>
-                    )}
                     {discount !== null && (
-                      <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white">-{discount}%</span>
+                      <span className="text-xs font-semibold text-deal">−{discount}%</span>
                     )}
                     {badges.map((badge) => (
-                      <span key={badge} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                      <span key={badge} className="text-xs font-semibold text-deal">
                         {BADGE_LABELS[badge] || badge}
                       </span>
                     ))}
                   </div>
 
-                  <h1 className="text-3xl font-extrabold tracking-normal text-foreground sm:text-4xl">{product.name}</h1>
+                  <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-[2.5rem] sm:leading-tight">{product.name}</h1>
 
                   <div className="flex flex-wrap items-baseline gap-3">
-                    <span className="font-mono text-4xl font-extrabold text-foreground">{formatMoney(product.price)}</span>
+                    <span className="text-2xl font-semibold text-foreground">{formatMoney(product.price)}</span>
                     {product.original_price && product.original_price > product.price && (
-                      <span className="font-mono text-lg text-muted-foreground line-through">{formatMoney(product.original_price)}</span>
+                      <span className="text-base text-muted-foreground line-through">{formatMoney(product.original_price)}</span>
                     )}
                   </div>
                 </div>
 
                 {product.description && (
-                  <div className="rounded-lg border border-border bg-secondary/25 p-4">
-                    <h2 className="text-sm font-bold text-foreground">Description</h2>
+                  <div className="border-t border-border pt-5">
+                    <h2 className="text-sm font-semibold text-foreground">Description</h2>
                     <p className="mt-2 whitespace-pre-line text-sm leading-6 text-muted-foreground">{product.description}</p>
                   </div>
                 )}
 
                 {specs.length > 0 && (
-                  <div className="rounded-lg border border-border bg-background p-4">
-                    <h2 className="text-sm font-bold text-foreground">Fiche technique</h2>
+                  <div className="border-t border-border pt-5">
+                    <h2 className="text-sm font-semibold text-foreground">Caractéristiques</h2>
                     <dl className="mt-3 divide-y divide-border">
                       {specs.map((spec) => (
                         <div key={`${spec.name}-${spec.value}`} className="grid grid-cols-[42%_1fr] gap-3 py-2 text-sm">
@@ -442,10 +403,10 @@ export default function ProductDetail() {
                           onClick={() => selectColor(color, colorIndex)}
                           title={color.name}
                           aria-label={`Choisir la couleur ${color.name}`}
-                          className={`h-9 w-9 rounded-full border transition ${
+                          className={`h-9 w-9 rounded-full ring-1 ring-inset ring-black/10 transition ${
                             selectedColor?.name === color.name
-                              ? 'scale-110 ring-2 ring-primary ring-offset-2'
-                              : 'border-border hover:scale-105'
+                              ? 'outline outline-2 outline-offset-2 outline-foreground'
+                              : 'hover:scale-105'
                           }`}
                           style={{ backgroundColor: color.hex }}
                         />
@@ -457,89 +418,62 @@ export default function ProductDetail() {
                 {!isOutOfStock && (
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="text-sm font-semibold text-foreground">Quantité</span>
-                    <div className="flex items-center gap-2 rounded-lg border border-border p-1">
-                      <button onClick={() => setQty((value) => Math.max(1, value - 1))} className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-secondary">
+                    <div className="flex items-center gap-1 rounded-full border border-border p-1">
+                      <button onClick={() => setQty((value) => Math.max(1, value - 1))} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary">
                         <Minus className="h-4 w-4" />
                       </button>
-                      <span className="w-8 text-center font-mono font-bold">{qty}</span>
-                      <button onClick={() => setQty((value) => value + 1)} className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-secondary">
+                      <span className="w-8 text-center font-medium">{qty}</span>
+                      <button onClick={() => setQty((value) => value + 1)} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary">
                         <Plus className="h-4 w-4" />
                       </button>
                     </div>
-                    {qty > 1 && <span className="font-mono text-sm text-muted-foreground">= {formatMoney(product.price * qty)}</span>}
+                    {qty > 1 && <span className="text-sm text-muted-foreground">= {formatMoney(product.price * qty)}</span>}
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
-                  <Truck className="h-4 w-4 shrink-0 text-primary" />
-                  <span className="font-medium text-foreground">Livraison partout au Maroc</span>
-                  <span className="text-muted-foreground">40 MAD</span>
-                </div>
-
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <Button onClick={handleAdd} disabled={isOutOfStock} className="h-12 rounded-lg font-semibold">
+                  <Button onClick={handleAdd} disabled={isOutOfStock} className="h-12 rounded-full font-medium">
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     Ajouter au panier
                   </Button>
-                  <Button onClick={handleWhatsApp} disabled={isOutOfStock} className="h-12 rounded-lg bg-green-500 font-semibold text-white hover:bg-green-600">
+                  <Button onClick={handleWhatsApp} disabled={isOutOfStock} variant="outline" className="h-12 rounded-full font-medium">
                     <MessageCircle className="mr-2 h-5 w-5" />
                     WhatsApp
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => toggleWishlist(product)}
-                    className="h-11 rounded-lg font-semibold"
-                    aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                  >
-                    {isWishlisted ? <Check className="mr-2 h-4 w-4 text-red-500" /> : <Heart className="mr-2 h-4 w-4" />}
-                    Favoris
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={isCompared ? 'default' : 'outline'}
-                    onClick={() => toggleCompare(product)}
-                    className="h-11 rounded-lg font-semibold"
-                    aria-pressed={isCompared}
-                  >
-                    <Scale className="mr-2 h-4 w-4" />
-                    {isCompared ? 'Comparé' : 'Comparer'}
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
                   <button
                     type="button"
-                    onClick={handleCopyLink}
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/35 hover:text-primary"
+                    onClick={() => toggleWishlist(product)}
+                    className="inline-flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                   >
-                    <Copy className="h-3.5 w-3.5" />
-                    Copier
+                    <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-primary text-primary' : ''}`} />
+                    {isWishlisted ? 'Dans vos favoris' : 'Favoris'}
                   </button>
-                  <a
-                    href={`https://wa.me/?text=${shareText}%20${shareUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background text-xs font-semibold text-muted-foreground transition-colors hover:border-green-500/35 hover:text-green-600"
+                  <button
+                    type="button"
+                    onClick={() => toggleCompare(product)}
+                    aria-pressed={isCompared}
+                    className={`inline-flex items-center gap-1.5 font-medium transition-colors ${isCompared ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                   >
-                    <Share2 className="h-3.5 w-3.5" />
-                    WhatsApp
+                    <Scale className="h-4 w-4" />
+                    {isCompared ? 'Comparé' : 'Comparer'}
+                  </button>
+                  <span className="hidden h-4 w-px bg-border sm:block" />
+                  <button type="button" onClick={handleCopyLink} className="inline-flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground">
+                    <Copy className="h-4 w-4" /> Copier le lien
+                  </button>
+                  <a href={`https://wa.me/?text=${shareText}%20${shareUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground">
+                    <Share2 className="h-4 w-4" /> Partager
                   </a>
-                  <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background text-xs font-semibold text-muted-foreground transition-colors hover:border-blue-500/35 hover:text-blue-600"
-                  >
-                    <Facebook className="h-3.5 w-3.5" />
-                    Facebook
+                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`} target="_blank" rel="noopener noreferrer" aria-label="Partager sur Facebook" className="inline-flex items-center text-muted-foreground transition-colors hover:text-foreground">
+                    <Facebook className="h-4 w-4" />
                   </a>
                 </div>
 
-                <div className="grid gap-2 rounded-lg border border-border bg-secondary/25 p-4 text-sm text-muted-foreground">
+                <div className="grid gap-3 rounded-3xl bg-secondary p-5 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Truck className="h-4 w-4 text-primary" />
                     <span>Livraison partout au Maroc sous 24-72h selon la ville.</span>
@@ -557,26 +491,25 @@ export default function ProductDetail() {
             </section>
 
             {related.length > 0 && (
-              <section className="mt-12">
-                <div className="mb-4 flex items-baseline justify-between gap-3">
+              <section className="mt-20">
+                <div className="mb-6 flex items-baseline justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-extrabold tracking-normal text-foreground">Produits similaires</h2>
+                    <h2 className="section-title">Vous aimerez aussi</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{product.category}</p>
                   </div>
                   <Link
                     to={product.category ? `/category/${slugify(product.category)}` : '/'}
-                    className="text-sm font-semibold text-primary"
+                    className="text-sm font-medium text-primary hover:underline"
                   >
-                    Voir tout
+                    Tout voir
                   </Link>
                 </div>
-                <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+                <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
                   {related.map((item, index) => (
-                    <div key={item.id} className="w-[72vw] max-w-[240px] shrink-0 sm:w-[220px]">
+                    <div key={item.id} className="w-[46vw] max-w-[220px] shrink-0 sm:w-[220px]">
                       <ProductCard
                         product={item}
                         onAddToCart={addToCart}
-                        onQuickView={setSelectedProduct}
                         imagePriority={index < 2}
                       />
                     </div>
@@ -585,15 +518,15 @@ export default function ProductDetail() {
               </section>
             )}
 
+            <div className="mt-20" />
             <RecentlyViewedSection
               products={products.filter((item) => item.status !== 'inactive')}
               currentProductId={product.id}
               onAddToCart={addToCart}
-              onQuickView={setSelectedProduct}
             />
           </>
         )}
-      </main>
+      </div>
 
       {lightboxOpen && activeSrc && (
         <div className="fixed inset-0 z-50 bg-black/92 p-4 text-white" role="dialog" aria-modal="true">
@@ -651,29 +584,26 @@ export default function ProductDetail() {
       )}
 
       {product && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/96 px-4 py-3 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur sm:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl md:hidden">
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold text-muted-foreground">{product.name}</p>
-              <p className="font-mono text-lg font-extrabold text-foreground">
+              <p className="text-lg font-semibold text-foreground">
                 {formatMoney(product.price * qty)}
               </p>
             </div>
-            {isOutOfStock ? (
-              <span className="rounded-full bg-orange-500/12 px-3 py-1 text-xs font-bold text-orange-500">Rupture</span>
-            ) : (
-              <span className="rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-bold text-emerald-600">En stock</span>
-            )}
+            {isOutOfStock && <span className="text-xs font-semibold text-muted-foreground">Épuisé</span>}
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={handleAdd} disabled={isOutOfStock} className="h-11 rounded-lg text-sm font-semibold">
+            <Button onClick={handleAdd} disabled={isOutOfStock} className="h-11 rounded-full text-sm font-medium">
               <ShoppingCart className="mr-2 h-4 w-4" />
               Ajouter
             </Button>
             <Button
               onClick={handleWhatsApp}
               disabled={isOutOfStock}
-              className="h-11 rounded-lg bg-green-500 text-sm font-semibold text-white hover:bg-green-600"
+              variant="outline"
+              className="h-11 rounded-full text-sm font-medium"
             >
               <MessageCircle className="mr-2 h-4 w-4" />
               WhatsApp
@@ -682,38 +612,6 @@ export default function ProductDetail() {
         </div>
       )}
 
-      <Footer onCategorySelect={handleCategorySelect} />
-
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          onAddToCart={addToCart}
-        />
-      )}
-
-      <WishlistSidebar
-        isOpen={wishlistOpen}
-        onClose={() => setWishlistOpen(false)}
-        wishlist={wishlist}
-        onRemove={removeFromWishlist}
-        onAddToCart={addToCart}
-      />
-
-      <CartSidebar
-        isOpen={cartOpen}
-        onClose={() => setCartOpen(false)}
-        cart={cart}
-        totalPrice={totalPrice}
-        products={products}
-        onUpdateQuantity={updateQuantity}
-        onUpdateVariant={updateVariant}
-        onRemove={removeFromCart}
-        onClear={clearCart}
-      />
-
-      <ComparePanel products={products.filter((item) => item.status !== 'inactive')} />
-
-    </div>
+    </StoreLayout>
   );
 }

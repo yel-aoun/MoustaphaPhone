@@ -28,12 +28,12 @@ export default function WishlistSidebar({ isOpen, onClose, wishlist, onRemove, o
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-background/95 backdrop-blur-[30px] border-l border-border z-50 flex flex-col"
+            className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-border bg-background"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 h-16 border-b border-border shrink-0">
               <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                <Heart className="w-5 h-5 text-primary fill-primary" />
                 <h2 className="font-semibold text-lg">Mes Favoris</h2>
                 <span className="text-sm text-muted-foreground">({wishlist.length})</span>
               </div>
@@ -66,22 +66,22 @@ export default function WishlistSidebar({ isOpen, onClose, wishlist, onRemove, o
                         initial={{ opacity: 0, x: 30 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 30 }}
-                        className="flex gap-3 p-3 rounded-xl bg-secondary/50"
+                        className="flex gap-3 rounded-2xl bg-secondary p-3"
                       >
                         <img
                           src={cloudinaryImage(item.image_url, { width: 160, height: 160, crop: 'fill' })}
                           alt={item.name}
-                          className="w-16 h-16 rounded-lg object-cover shrink-0"
+                          className="h-16 w-16 shrink-0 rounded-xl bg-background object-contain p-1"
                         />
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-medium leading-tight line-clamp-2">{item.name}</h4>
-                          <p className="font-mono text-sm font-bold mt-1 text-primary">
+                          <p className="mt-1 text-sm font-semibold text-foreground">
                             {item.price?.toLocaleString()} MAD
                           </p>
                           <div className="flex items-center gap-2 mt-2">
                             <button
                               onClick={() => handleAdd(item)}
-                              className="flex items-center gap-1.5 text-xs font-semibold bg-primary text-primary-foreground px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
+                              className="flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-85"
                             >
                               <ShoppingCart className="w-3 h-3" />
                               Ajouter au panier

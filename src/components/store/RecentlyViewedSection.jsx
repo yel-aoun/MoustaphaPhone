@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clock3 } from 'lucide-react';
 import ProductCard from '@/components/store/ProductCard';
 import { RECENT_UPDATED_EVENT, getRecentlyViewedIds } from '@/lib/recentStore';
 
@@ -7,7 +6,6 @@ export default function RecentlyViewedSection({
   products = [],
   currentProductId = null,
   onAddToCart,
-  onQuickView,
 }) {
   const [ids, setIds] = useState(() => getRecentlyViewedIds());
 
@@ -32,22 +30,12 @@ export default function RecentlyViewedSection({
   if (recentProducts.length === 0) return null;
 
   return (
-    <section className="mt-12">
-      <div className="mb-4 flex items-center gap-2">
-        <Clock3 className="h-4 w-4 text-primary" />
-        <div>
-          <h2 className="text-xl font-extrabold tracking-normal text-foreground">Consultés récemment</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">Retour rapide aux produits que vous avez ouverts.</p>
-        </div>
-      </div>
-      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+    <section className="pb-14 sm:pb-20">
+      <h2 className="section-title mb-6">Consultés récemment</h2>
+      <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         {recentProducts.map((product) => (
-          <div key={product.id} className="w-[72vw] max-w-[240px] shrink-0 sm:w-[220px]">
-            <ProductCard
-              product={product}
-              onAddToCart={onAddToCart}
-              onQuickView={onQuickView}
-            />
+          <div key={product.id} className="w-[46vw] max-w-[220px] shrink-0 sm:w-[200px]">
+            <ProductCard product={product} onAddToCart={onAddToCart} />
           </div>
         ))}
       </div>

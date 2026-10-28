@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { motion, AnimatePresence } from 'framer-motion';
-import ZelligePattern from './ZelligePattern';
+import { Link } from 'react-router-dom';
+import { slugify } from '@/lib/products';
 import BrandLogo from '@/components/brand/BrandLogo';
 import { buildWhatsAppLink, storeBrand } from '@/lib/brand';
 
@@ -41,78 +42,53 @@ const LEGAL_PAGES = {
   },
 };
 
-export default function Footer({ onCategorySelect }) {
+export default function Footer() {
   const { data: categories = [] } = useCategories();
   const [openModal, setOpenModal] = useState(null);
-
-  const handleCategoryClick = (name) => {
-    onCategorySelect?.(name);
-    document.getElementById('catalogue')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const modalData = openModal ? LEGAL_PAGES[openModal] : null;
 
   return (
     <>
-      <footer className="relative border-t border-border mt-0 bg-secondary/40 overflow-hidden">
-        <ZelligePattern id="footer" opacity={0.06} />
-
-        {/* Brand header — centered logo + tagline */}
-        <div className="relative border-b border-border/60">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 flex flex-col items-center gap-4">
-            <BrandLogo size="lg" />
-            <p className="text-sm text-muted-foreground text-center max-w-md leading-relaxed">
-              {storeBrand.description}
-            </p>
-            <div className="flex gap-2.5 mt-1">
+      <footer className="border-t border-border bg-secondary">
+        <div className="container-store py-12">
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+            <div className="space-y-4">
+              <BrandLogo size="sm" />
+              <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">{storeBrand.description}</p>
               <a
                 href={buildWhatsAppLink(`Bonjour ${storeBrand.name}, je souhaite vous contacter.`)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-85"
               >
-                <MessageCircle className="w-4 h-4" />
-                Nous contacter
+                <MessageCircle className="h-4 w-4" />
+                {storeBrand.whatsappDisplay}
               </a>
             </div>
-          </div>
-        </div>
 
-        {/* Links grid */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-10">
-
-            {/* Catégories */}
             <div>
-              <h4 className="text-xs font-bold text-foreground uppercase tracking-widest mb-5">
-                Catégories
-              </h4>
-              <ul className="space-y-3">
+              <h4 className="mb-4 text-xs font-semibold text-foreground">Boutique</h4>
+              <ul className="space-y-2.5">
+                <li><Link to="/boutique" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Tous les produits</Link></li>
                 {categories.map((cat) => (
                   <li key={cat.name}>
-                    <button
-                      onClick={() => handleCategoryClick(cat.name)}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                    >
+                    <Link to={`/category/${slugify(cat.name)}`} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                       {cat.name}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Informations */}
             <div>
-              <h4 className="text-xs font-bold text-foreground uppercase tracking-widest mb-5">
-                Informations
-              </h4>
-              <ul className="space-y-3">
-                {Object.keys(LEGAL_PAGES).map((link) => (
+              <h4 className="mb-4 text-xs font-semibold text-foreground">Aide</h4>
+              <ul className="space-y-2.5">
+                <li><Link to="/track-order" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Suivre une commande</Link></li>
+                <li><Link to="/panier" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Mon panier</Link></li>
+                {Object.keys(LEGAL_PAGES).slice(0, 1).concat('Nous contacter').map((link) => (
                   <li key={link}>
-                    <button
-                      onClick={() => setOpenModal(link)}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors text-left"
-                    >
+                    <button onClick={() => setOpenModal(link)} className="text-left text-sm text-muted-foreground transition-colors hover:text-foreground">
                       {link}
                     </button>
                   </li>
@@ -120,36 +96,24 @@ export default function Footer({ onCategorySelect }) {
               </ul>
             </div>
 
-            {/* Commander */}
-            <div className="col-span-2 sm:col-span-1">
-              <h4 className="text-xs font-bold text-foreground uppercase tracking-widest mb-5">
-                Commander
-              </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                Commandez directement via WhatsApp. Notre équipe vous répond {storeBrand.supportHours}.
-              </p>
-              <a
-                href={buildWhatsAppLink(`Bonjour ${storeBrand.name}, je souhaite commander.`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400 font-medium hover:underline underline-offset-2 transition-colors"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                {storeBrand.whatsappDisplay}
-              </a>
-              <a
-                href="/track-order"
-                className="mt-3 block text-sm font-medium text-primary hover:underline underline-offset-2"
-              >
-                Suivre une commande
-              </a>
+            <div>
+              <h4 className="mb-4 text-xs font-semibold text-foreground">Informations</h4>
+              <ul className="space-y-2.5">
+                {['Conditions générales de vente', 'Politique de confidentialité'].map((link) => (
+                  <li key={link}>
+                    <button onClick={() => setOpenModal(link)} className="text-left text-sm text-muted-foreground transition-colors hover:text-foreground">
+                      {link}
+                    </button>
+                  </li>
+                ))}
+                <li className="pt-2 text-sm text-muted-foreground">Service client {storeBrand.supportHours}</li>
+              </ul>
             </div>
           </div>
 
-          {/* Copyright */}
-          <div className="border-t border-border/60 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+          <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>© {new Date().getFullYear()} {storeBrand.name}. Tous droits réservés.</p>
-            <p>Fait avec ♥ au Maroc</p>
+            <p>Livraison partout au Maroc · Paiement à la livraison</p>
           </div>
         </div>
       </footer>

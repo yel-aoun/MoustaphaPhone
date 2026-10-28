@@ -27,10 +27,10 @@ export default function SearchSuggestions({ query, products = [], onCategorySele
   ).slice(0, 4);
 
   return (
-    <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-lg border border-border bg-background shadow-xl sm:min-w-[420px]">
+    <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] overflow-hidden rounded-2xl border border-border bg-popover p-1.5 shadow-soft">
       {matchingProducts.length > 0 ? (
         <div className="py-1">
-          <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="px-3 py-2 text-xs font-medium text-muted-foreground">
             Produits
           </div>
           {matchingProducts.map((product) => (
@@ -39,7 +39,7 @@ export default function SearchSuggestions({ query, products = [], onCategorySele
               to={getProductPath(product)}
               onMouseDown={(event) => event.preventDefault()}
               onClick={onSelect}
-              className="flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-secondary"
+              className="flex items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-secondary"
             >
               {product.image_url ? (
                 <img
@@ -47,7 +47,7 @@ export default function SearchSuggestions({ query, products = [], onCategorySele
                   alt={product.name}
                   loading="lazy"
                   decoding="async"
-                  className="h-10 w-10 shrink-0 rounded-md bg-white object-cover"
+                  className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1"
                 />
               ) : (
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary">
@@ -55,10 +55,10 @@ export default function SearchSuggestions({ query, products = [], onCategorySele
                 </span>
               )}
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-foreground">{product.name}</span>
+                <span className="block truncate text-sm font-medium text-foreground">{product.name}</span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   {product.category && <span className="truncate">{product.category}</span>}
-                  <span className="font-mono font-semibold text-primary">{formatMoney(product.price)}</span>
+                  <span className="font-medium text-foreground">{formatMoney(product.price)}</span>
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
                       product.status === 'out_of_stock'
@@ -83,7 +83,7 @@ export default function SearchSuggestions({ query, products = [], onCategorySele
 
       {matchingCategories.length > 0 && (
         <div className="border-t border-border px-3 py-2">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Catégories</p>
+          <p className="mb-2 text-xs font-medium text-muted-foreground">Catégories</p>
           <div className="flex flex-wrap gap-2">
             {matchingCategories.map((category) => (
               <button
@@ -94,7 +94,7 @@ export default function SearchSuggestions({ query, products = [], onCategorySele
                   onCategorySelect?.(category);
                   onSelect?.();
                 }}
-                className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
               >
                 {category}
               </button>
