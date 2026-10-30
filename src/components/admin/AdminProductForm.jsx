@@ -67,8 +67,11 @@ const productToForm = (product) => ({
   badges: Array.isArray(product?.badges) ? product.badges : [],
 });
 
-// A new product's draft survives a reload (iOS Safari can reload a tab it evicted for memory).
-// Only uploaded photos can be kept, so colour links are remapped to the photos that remain.
+// Drafts survive a reload (iOS can reload a tab it evicted, or on an accidental pull-to-refresh).
+// New products and each edited product keep their own draft. Only uploaded photos can be kept,
+// so colour links are remapped to the photos that remain.
+const draftKeyFor = (product) => (product?.id ? `${DRAFT_KEY}:${product.id}` : DRAFT_KEY);
+
 function formToDraft(form) {
   const kept = [];
   const indexMap = new Map();
@@ -89,18 +92,22 @@ function formToDraft(form) {
   };
 }
 
-function loadDraft() {
+// Compares drafts by content, ignoring the per-session photo ids
+const draftSignature = (draft) =>
+  draft && JSON.stringify({ ...draft, images: draft.images.map((img) => img.url) });
+
+function loadDraft(key) {
   try {
-    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    const draft = JSON.parse(localStorage.getItem(key) || 'null');
     return draft && Array.isArray(draft.images) ? { ...createEmptyForm(), ...draft } : null;
   } catch {
     return null;
   }
 }
 
-function clearDraft() {
+function clearDraft(key) {
   try {
-    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(key);
   } catch {
     // Storage unavailable (private mode); nothing to clear
   }
@@ -119,36 +126,39 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
   const queryClient = useQueryClient();
   const { data: categories = [] } = useCategories();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState(() => (product ? productToForm(product) : loadDraft() || createEmptyForm()));
-  const [draftRestored, setDraftRestored] = useState(() => !product && Boolean(loadDraft()));
+  const draftKey = draftKeyFor(product);
+  const baseForm = () => (product ? productToForm(product) : createEmptyForm());
+  const [form, setForm] = useState(() => loadDraft(draftKey) || baseForm());
+  const [draftRestored, setDraftRestored] = useState(() => Boolean(loadDraft(draftKey)));
   // Per photo: the shrink-and-upload promise and the shrunk data URL (kept for a retry on save)
   const uploadsRef = useRef(new Map());
   const dataUrlsRef = useRef(new Map());
   const isEditing = Boolean(product?.id);
 
   useEffect(() => {
-    const draft = product ? null : loadDraft();
-    setForm(product ? productToForm(product) : draft || createEmptyForm());
+    const draft = loadDraft(draftKeyFor(product));
+    setForm(draft || (product ? productToForm(product) : createEmptyForm()));
     setDraftRestored(Boolean(draft));
   }, [product]);
 
   useEffect(() => {
-    if (isEditing) return undefined;
     const timer = setTimeout(() => {
       try {
         const draft = formToDraft(form);
-        if (draft) localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-        else localStorage.removeItem(DRAFT_KEY);
+        // An edit only needs a draft once it differs from the saved product
+        const unchanged = isEditing && draftSignature(draft) === draftSignature(formToDraft(productToForm(product)));
+        if (draft && !unchanged) localStorage.setItem(draftKey, JSON.stringify(draft));
+        else localStorage.removeItem(draftKey);
       } catch {
         // Storage full or unavailable; the draft is a convenience only
       }
-    }, 400);
+    }, 300);
     return () => clearTimeout(timer);
-  }, [form, isEditing]);
+  }, [form, draftKey, isEditing, product]);
 
   const discardDraft = () => {
-    clearDraft();
-    setForm(createEmptyForm());
+    clearDraft(draftKey);
+    setForm(baseForm());
     setDraftRestored(false);
   };
 
@@ -350,7 +360,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
         queryClient.invalidateQueries({ queryKey: ['admin-products'] }),
         queryClient.invalidateQueries({ queryKey: ['products'] }),
       ]);
-      clearDraft();
+      clearDraft(draftKey);
       setDraftRestored(false);
       if (submitAction === 'stay') {
         setForm(productToForm(savedProduct));
@@ -369,7 +379,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 rounded-2xl border border-white/12 bg-white/[0.05] p-4 shadow-[0_20px_70px_rgba(2,6,23,0.45)] backdrop-blur-sm sm:p-7"
+      className="space-y-6 rounded-2xl border border-white/12 bg-white/[0.05] p-4 shadow-[0_20px_70px_rgba(2,6,23,0.45)] sm:p-7 md:backdrop-blur-sm"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -385,7 +395,10 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
         {isEditing && onCancel ? (
           <button
             type="button"
-            onClick={onCancel}
+            onClick={() => {
+              clearDraft(draftKey);
+              onCancel();
+            }}
             className="rounded-2xl border border-white/10 px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:border-white/20 hover:text-white"
           >
             Annuler
@@ -393,7 +406,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
         ) : null}
       </div>
 
-      {draftRestored && !isEditing && (
+      {draftRestored && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-sm text-slate-200">
           <span>Brouillon restauré — vous pouvez reprendre où vous en étiez.</span>
           <button

@@ -185,6 +185,12 @@ html {
     display: none;
   }
 
+  /* No pull-to-refresh in the admin: a stray downward swipe while filling a form reloaded the page */
+  html.admin-open,
+  html.admin-open body {
+    overscroll-behavior-y: none;
+  }
+
   /* iOS Safari zooms into fields under 16px and stays zoomed; keep admin fields at 16px on phones */
   @media (max-width: 639px) {
     html.admin-open input:not([type='checkbox']):not([type='radio']):not([type='color']),

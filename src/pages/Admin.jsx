@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, LogOut, LayoutGrid, CirclePlus, BarChart2, Tag, SlidersHorizontal, ShoppingBag, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ADMIN_AUTH_EVENT, adminAuth } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { ADMIN_AUTH_EVENT, adminAuth, base44 } from '@/api/base44Client';
+import { storagePrefix } from '@/lib/brand';
 import AdminLogin from '@/components/admin/AdminLogin';
 import AdminProductForm from '@/components/admin/AdminProductForm';
 import AdminProductList from '@/components/admin/AdminProductList';
@@ -14,11 +16,45 @@ import AdminCommandPalette, { ADMIN_PALETTE_EVENT } from '@/components/admin/Adm
 import CircuitBackground from '@/components/store/fx/CircuitBackground';
 import BrandLogo from '@/components/brand/BrandLogo';
 
+// The open screen (and the product being edited) is remembered for this tab, so a reload
+// brings the admin back to the form where its saved draft is waiting.
+const VIEW_KEY = `${storagePrefix}_admin_view`;
+
+function readSavedView() {
+  try {
+    return JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null') || {};
+  } catch {
+    return {};
+  }
+}
+
 export default function Admin() {
   const [session, setSession] = useState(undefined); // undefined = loading
-  const [activeView, setActiveView] = useState('dashboard');
+  const [activeView, setActiveView] = useState(() => readSavedView().view || 'dashboard');
   const [editingProduct, setEditingProduct] = useState(null);
+  const [pendingEditId, setPendingEditId] = useState(() => readSavedView().editingId || null);
   const mobileNavRef = useRef(null);
+
+  const { data: products } = useQuery({
+    queryKey: ['admin-products'],
+    queryFn: () => base44.entities.Product.list(),
+    enabled: Boolean(session && pendingEditId),
+  });
+
+  useEffect(() => {
+    if (!pendingEditId || !products) return;
+    setEditingProduct(products.find((item) => item.id === pendingEditId) || null);
+    setPendingEditId(null);
+  }, [pendingEditId, products]);
+
+  useEffect(() => {
+    if (pendingEditId) return;
+    try {
+      sessionStorage.setItem(VIEW_KEY, JSON.stringify({ view: activeView, editingId: editingProduct?.id || null }));
+    } catch {
+      // Storage unavailable; the admin simply opens on its default screen
+    }
+  }, [activeView, editingProduct?.id, pendingEditId]);
 
   // Each view starts at the top, and the phone tab strip keeps the active tab in sight
   useEffect(() => {
@@ -147,8 +183,9 @@ export default function Admin() {
       {/* Control-room backdrop */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <CircuitBackground className="text-slate-400 opacity-40" />
-        <div className="absolute -left-40 -top-40 h-[480px] w-[480px] animate-aurora rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute -bottom-40 right-0 h-[420px] w-[520px] animate-aurora rounded-full bg-indigo-500/10 blur-3xl [animation-delay:-8s]" />
+        {/* Large blurred layers cost a lot of GPU memory on phones, where iOS evicts heavy tabs */}
+        <div className="absolute -left-40 -top-40 hidden h-[480px] w-[480px] animate-aurora rounded-full bg-primary/15 blur-3xl md:block" />
+        <div className="absolute -bottom-40 right-0 hidden h-[420px] w-[520px] animate-aurora rounded-full bg-indigo-500/10 blur-3xl [animation-delay:-8s] md:block" />
       </div>
 
       <div className="relative flex min-h-screen">
@@ -231,7 +268,12 @@ export default function Admin() {
                 <AdminOrderList />
               </div>
             )}
-            {activeView === 'add' && (
+            {activeView === 'add' && pendingEditId && (
+              <div className="flex justify-center py-16">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            )}
+            {activeView === 'add' && !pendingEditId && (
               <div className="mx-auto w-full max-w-3xl">
                 <AdminProductForm
                   product={editingProduct}
