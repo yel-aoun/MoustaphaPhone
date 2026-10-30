@@ -262,10 +262,10 @@ export default function AdminProductList({ onEdit, editingProductId }) {
     <>
       <div className="space-y-5">
         <AdminCatalogTools products={products} />
-        <div className="space-y-5 rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_20px_70px_rgba(2,6,23,0.35)] sm:p-6">
+        <div className="space-y-5 rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_20px_70px_rgba(2,6,23,0.35)] sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-2xl font-semibold text-white">Produits</h3>
+          <h3 className="text-xl font-semibold text-white sm:text-2xl">Produits</h3>
           <div className="flex items-center gap-2">
             <p className="hidden text-sm text-slate-400 sm:block">
               {filteredProducts.length} affiché{filteredProducts.length > 1 ? 's' : ''}
@@ -332,7 +332,7 @@ export default function AdminProductList({ onEdit, editingProductId }) {
         )}
 
         {/* Category filters */}
-        <div className="flex flex-wrap gap-2">
+        <div className="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
           {PRODUCT_CATEGORY_FILTERS.map((category) => {
             const isActive = activeCategory === category;
             return (
@@ -340,7 +340,7 @@ export default function AdminProductList({ onEdit, editingProductId }) {
                 key={category}
                 type="button"
                 onClick={() => setActiveCategory(category)}
-                className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                   isActive
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-white/10 bg-white/[0.03] text-slate-300 hover:border-primary/40 hover:bg-white/[0.06] hover:text-white'
@@ -352,7 +352,7 @@ export default function AdminProductList({ onEdit, editingProductId }) {
           })}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
           {QUALITY_FILTERS.map((filter) => {
             const isActive = qualityFilter === filter.id;
             return (
@@ -360,7 +360,7 @@ export default function AdminProductList({ onEdit, editingProductId }) {
                 key={filter.id}
                 type="button"
                 onClick={() => setQualityFilter(filter.id)}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
                   isActive
                     ? 'border-orange-400/50 bg-orange-500/12 text-orange-300'
                     : 'border-white/10 bg-white/[0.03] text-slate-400 hover:text-white'
@@ -468,13 +468,13 @@ export default function AdminProductList({ onEdit, editingProductId }) {
                           <Button variant="ghost" size="icon" onClick={() => setProductStatus(p, p.status === 'active' ? 'inactive' : 'active')} className="h-8 w-8 text-slate-400 hover:bg-white/10 hover:text-white">
                             {p.status === 'active' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => duplicateProduct(p)} className="h-8 w-8 text-slate-400 hover:bg-white/10 hover:text-white">
+                          <Button variant="ghost" size="icon" onClick={() => duplicateProduct(p)} aria-label="Dupliquer le produit" className="h-8 w-8 text-slate-400 hover:bg-white/10 hover:text-white">
                             <Copy className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => onEdit?.(p)} className="h-8 w-8 text-slate-400 hover:bg-white/10 hover:text-white">
+                          <Button variant="ghost" size="icon" onClick={() => onEdit?.(p)} aria-label="Modifier le produit" className="h-8 w-8 text-slate-400 hover:bg-white/10 hover:text-white">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeletingProduct(p)} className="h-8 w-8 text-slate-500 hover:bg-destructive/10 hover:text-destructive">
+                          <Button variant="ghost" size="icon" onClick={() => setDeletingProduct(p)} aria-label="Supprimer le produit" className="h-8 w-8 text-slate-500 hover:bg-destructive/10 hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -497,130 +497,139 @@ export default function AdminProductList({ onEdit, editingProductId }) {
               return (
                 <div
                   key={p.id}
-                  className={`flex items-center gap-4 rounded-2xl border p-4 transition-colors ${
+                  className={`flex flex-col gap-3 rounded-2xl border p-3 transition-colors sm:flex-row sm:items-center sm:gap-4 sm:p-4 ${
                     editingProductId === p.id
                       ? 'border-primary/50 bg-primary/10'
                       : 'border-white/10 bg-[#131c31]/80'
                   }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => toggleSelect(p.id)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-white/10 hover:text-white"
-                    aria-label={selectedIds.includes(p.id) ? 'Désélectionner' : 'Sélectionner'}
-                  >
-                    {selectedIds.includes(p.id) ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
-                  </button>
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleSelect(p.id)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-white/10 hover:text-white"
+                      aria-label={selectedIds.includes(p.id) ? 'Désélectionner' : 'Sélectionner'}
+                    >
+                      {selectedIds.includes(p.id) ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
+                    </button>
 
-                  {p.image_url ? (
-                    <img src={cloudinaryImage(p.image_url, { width: 160, height: 160, crop: 'fill' })} alt={p.name} className="h-14 w-14 shrink-0 rounded-xl object-cover" />
-                  ) : (
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/[0.04]">
-                      <PackageOpen className="h-5 w-5 text-slate-500" />
-                    </div>
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{p.name}</p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="text-xs text-slate-400">{p.category}</span>
-                      <StatusBadge status={p.status} />
-                      {discount !== null && (
-                        <span className="inline-flex items-center rounded-full bg-pink-500/10 px-2 py-0.5 text-[10px] font-semibold text-pink-400">
-                          -{discount}%
-                        </span>
-                      )}
-                      {needsWork(p) && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-300">
-                          <AlertTriangle className="h-2.5 w-2.5" />
-                          À compléter
-                        </span>
-                      )}
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                        score >= 80 ? 'bg-emerald-500/10 text-emerald-300' : score >= 60 ? 'bg-orange-500/10 text-orange-300' : 'bg-red-500/10 text-red-300'
-                      }`}>
-                        Qualité {score}%
-                      </span>
-                    </div>
-                    <div className="mt-2 h-1.5 max-w-xs rounded-full bg-white/[0.06]">
-                      <div
-                        className={`h-1.5 rounded-full ${score >= 80 ? 'bg-emerald-400' : score >= 60 ? 'bg-orange-400' : 'bg-red-400'}`}
-                        style={{ width: `${score}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    {editingPriceId === p.id ? (
-                      <input
-                        value={draftPrice}
-                        onChange={(event) => setDraftPrice(event.target.value)}
-                        onBlur={() => saveDraftPrice(p)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter') saveDraftPrice(p);
-                          if (event.key === 'Escape') setEditingPriceId(null);
-                        }}
-                        autoFocus
-                        className="h-8 w-24 rounded-2xl border border-white/10 bg-white/[0.06] px-2 text-right font-mono text-sm text-white outline-none focus:border-primary/50"
-                      />
+                    {p.image_url ? (
+                      <img src={cloudinaryImage(p.image_url, { width: 160, height: 160, crop: 'fill' })} alt={p.name} className="h-14 w-14 shrink-0 rounded-xl bg-white object-cover" />
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingPriceId(p.id);
-                          setDraftPrice(String(p.price || ''));
-                        }}
-                        className="rounded-md px-1 text-sm font-semibold text-white font-mono transition-colors hover:bg-white/10"
-                      >
-                        {p.price?.toLocaleString()} MAD
-                      </button>
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/[0.04]">
+                        <PackageOpen className="h-5 w-5 text-slate-500" />
+                      </div>
                     )}
-                    {p.original_price ? (
-                      <p className="text-xs text-slate-500 line-through font-mono">{p.original_price?.toLocaleString()} MAD</p>
-                    ) : null}
+
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-semibold text-white sm:line-clamp-1">{p.name}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span className="text-xs text-slate-400">{p.category}</span>
+                        <StatusBadge status={p.status} />
+                        {discount !== null && (
+                          <span className="inline-flex items-center rounded-full bg-pink-500/10 px-2 py-0.5 text-[10px] font-semibold text-pink-400">
+                            -{discount}%
+                          </span>
+                        )}
+                        {needsWork(p) && (
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-300">
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            À compléter
+                          </span>
+                        )}
+                        <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          score >= 80 ? 'bg-emerald-500/10 text-emerald-300' : score >= 60 ? 'bg-orange-500/10 text-orange-300' : 'bg-red-500/10 text-red-300'
+                        }`}>
+                          Qualité {score}%
+                        </span>
+                      </div>
+                      <div className="mt-2 h-1.5 max-w-xs rounded-full bg-white/[0.06]">
+                        <div
+                          className={`h-1.5 rounded-full ${score >= 80 ? 'bg-emerald-400' : score >= 60 ? 'bg-orange-400' : 'bg-red-400'}`}
+                          style={{ width: `${score}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      const nextStatus = p.status === 'active' ? 'inactive' : 'active';
-                      setProductStatus(p, nextStatus);
-                    }}
-                    disabled={savingId === p.id}
-                    className="shrink-0 text-slate-400 hover:bg-white/10 hover:text-white"
-                    aria-label={p.status === 'active' ? 'Masquer le produit' : 'Activer le produit'}
-                  >
-                    {savingId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : p.status === 'active' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                  <div className="flex items-center justify-between gap-2 border-t border-white/10 pt-2 sm:justify-end sm:border-0 sm:pt-0">
+                    <div className="shrink-0 sm:text-right">
+                      {editingPriceId === p.id ? (
+                        <input
+                          value={draftPrice}
+                          onChange={(event) => setDraftPrice(event.target.value)}
+                          onBlur={() => saveDraftPrice(p)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') saveDraftPrice(p);
+                            if (event.key === 'Escape') setEditingPriceId(null);
+                          }}
+                          autoFocus
+                          inputMode="decimal"
+                          className="h-8 w-24 rounded-2xl border border-white/10 bg-white/[0.06] px-2 text-right font-mono text-base text-white outline-none focus:border-primary/50 sm:text-sm"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingPriceId(p.id);
+                            setDraftPrice(String(p.price || ''));
+                          }}
+                          className="whitespace-nowrap rounded-md px-1 text-sm font-semibold text-white font-mono transition-colors hover:bg-white/10"
+                        >
+                          {p.price?.toLocaleString()} MAD
+                        </button>
+                      )}
+                      {p.original_price ? (
+                        <p className="whitespace-nowrap px-1 text-xs text-slate-500 line-through font-mono">{p.original_price?.toLocaleString()} MAD</p>
+                      ) : null}
+                    </div>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => duplicateProduct(p)}
-                    disabled={savingId === p.id}
-                    className="shrink-0 text-slate-400 hover:bg-white/10 hover:text-white"
-                    aria-label="Dupliquer le produit"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+                    <div className="flex shrink-0 items-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const nextStatus = p.status === 'active' ? 'inactive' : 'active';
+                          setProductStatus(p, nextStatus);
+                        }}
+                        disabled={savingId === p.id}
+                        className="text-slate-400 hover:bg-white/10 hover:text-white"
+                        aria-label={p.status === 'active' ? 'Masquer le produit' : 'Activer le produit'}
+                      >
+                        {savingId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : p.status === 'active' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit?.(p)}
-                    className="shrink-0 text-slate-400 hover:bg-white/10 hover:text-white"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeletingProduct(p)}
-                    className="shrink-0 text-slate-500 hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => duplicateProduct(p)}
+                        disabled={savingId === p.id}
+                        className="text-slate-400 hover:bg-white/10 hover:text-white"
+                        aria-label="Dupliquer le produit"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit?.(p)}
+                        className="text-slate-400 hover:bg-white/10 hover:text-white"
+                        aria-label="Modifier le produit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeletingProduct(p)}
+                        className="text-slate-500 hover:bg-destructive/10 hover:text-destructive"
+                        aria-label="Supprimer le produit"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               );
             })}

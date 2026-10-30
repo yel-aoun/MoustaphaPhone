@@ -184,6 +184,15 @@ html {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* iOS Safari zooms into fields under 16px and stays zoomed; keep admin fields at 16px on phones */
+  @media (max-width: 639px) {
+    html.admin-open input:not([type='checkbox']):not([type='radio']):not([type='color']),
+    html.admin-open textarea,
+    html.admin-open select {
+      font-size: 16px;
+    }
+  }
 }
 
 @layer utilities {
@@ -199,19 +208,28 @@ html {
   .animate-typing { animation: fx-typing 1.2s ease-in-out infinite; }
   .animate-ping-slow { animation: ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite; }
   .animate-slide-x { animation: fx-slide-x 3.2s linear infinite; }
+  .animate-battery-fill { animation: fx-battery-fill linear both; }
   .pause-on-hover:hover { animation-play-state: paused; }
 }
 
+@keyframes fx-battery-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes fx-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes fx-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
 @keyframes fx-scan { 0% { transform: translateY(-100%); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(100%); opacity: 0; } }
 @keyframes fx-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 /* Light pulse travelling along an SVG circuit trace (pathLength="100") */
 @keyframes fx-trace { from { stroke-dashoffset: 110; } to { stroke-dashoffset: -10; } }
-@keyframes fx-slide-x { from { left: -30%; } to { left: 100%; } }
+@keyframes fx-slide-x { from { transform: translateX(-100%); } to { transform: translateX(500%); } }
 @keyframes fx-aurora { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(8%, -6%) scale(1.12); } 100% { transform: translate(-6%, 6%) scale(0.95); } }
 @keyframes fx-typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
 @keyframes fx-shine { from { transform: translateX(-120%) skewX(-20deg); } to { transform: translateX(220%) skewX(-20deg); } }
+
+/* Phones: circuit pulses repaint the whole SVG every frame, and drifting blurred glows make Safari
+   re-blur large layers (and any glass above them) continuously. Keep both static to save battery and heat. */
+@media (hover: none), (max-width: 767px) {
+  .animate-trace { display: none; }
+  .animate-aurora { animation: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

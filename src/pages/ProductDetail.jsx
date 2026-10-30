@@ -323,17 +323,19 @@ export default function ProductDetail() {
                 </div>
 
                 {images.length > 1 && (
-                  <div className="mt-3 flex justify-center gap-1.5 sm:hidden">
+                  <div className="mt-2 flex justify-center sm:hidden">
                     {images.map((image, index) => (
                       <button
                         key={`dot-${image}`}
                         type="button"
                         onClick={() => selectImage(index)}
-                        className={`h-2 rounded-full transition-all ${
-                          index === activeImage ? 'w-6 bg-primary' : 'w-2 bg-muted-foreground/30'
-                        }`}
+                        className="flex h-8 items-center px-1.5"
                         aria-label={`Afficher l'image ${index + 1}`}
-                      />
+                      >
+                        <span className={`h-2 rounded-full transition-all ${
+                          index === activeImage ? 'w-6 bg-primary' : 'w-2 bg-muted-foreground/30'
+                        }`} />
+                      </button>
                     ))}
                   </div>
                 )}
@@ -460,11 +462,11 @@ export default function ProductDetail() {
                   </Button>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-0 text-sm sm:gap-y-2">
                   <button
                     type="button"
                     onClick={() => toggleWishlist(product)}
-                    className="inline-flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    className="inline-flex min-h-10 items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground sm:min-h-0"
                     aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                   >
                     <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-primary text-primary' : ''}`} />
@@ -474,19 +476,19 @@ export default function ProductDetail() {
                     type="button"
                     onClick={() => toggleCompare(product)}
                     aria-pressed={isCompared}
-                    className={`inline-flex items-center gap-1.5 font-medium transition-colors ${isCompared ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`inline-flex min-h-10 items-center gap-1.5 font-medium transition-colors sm:min-h-0 ${isCompared ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     <Scale className="h-4 w-4" />
                     {isCompared ? 'Comparé' : 'Comparer'}
                   </button>
                   <span className="hidden h-4 w-px bg-border sm:block" />
-                  <button type="button" onClick={handleCopyLink} className="inline-flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  <button type="button" onClick={handleCopyLink} className="inline-flex min-h-10 items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground sm:min-h-0">
                     <Copy className="h-4 w-4" /> Copier le lien
                   </button>
-                  <a href={`https://wa.me/?text=${shareText}%20${shareUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  <a href={`https://wa.me/?text=${shareText}%20${shareUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground sm:min-h-0">
                     <Share2 className="h-4 w-4" /> Partager
                   </a>
-                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`} target="_blank" rel="noopener noreferrer" aria-label="Partager sur Facebook" className="inline-flex items-center text-muted-foreground transition-colors hover:text-foreground">
+                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`} target="_blank" rel="noopener noreferrer" aria-label="Partager sur Facebook" className="inline-flex min-h-10 min-w-10 items-center justify-center text-muted-foreground sm:min-h-0 sm:min-w-0 transition-colors hover:text-foreground">
                     <Facebook className="h-4 w-4" />
                   </a>
                 </div>
@@ -504,7 +506,7 @@ export default function ProductDetail() {
                   </div>
                   <Link
                     to={product.category ? `/category/${slugify(product.category)}` : '/'}
-                    className="text-sm font-medium text-primary hover:underline"
+                    className="-my-2 inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline"
                   >
                     Tout voir
                   </Link>
@@ -579,17 +581,19 @@ export default function ProductDetail() {
               className="max-h-[82vh] w-full max-w-5xl object-contain"
             />
             {images.length > 1 && (
-              <div className="flex justify-center gap-1.5">
+              <div className="flex justify-center">
                 {images.map((image, index) => (
                   <button
                     key={`lightbox-dot-${image}`}
                     type="button"
                     onClick={() => setActiveImage(index)}
-                    className={`h-2 rounded-full transition-all ${
-                      index === activeImage ? 'w-7 bg-white' : 'w-2 bg-white/35'
-                    }`}
+                    className="flex h-8 items-center px-1.5"
                     aria-label={`Afficher l'image ${index + 1}`}
-                  />
+                  >
+                    <span className={`h-2 rounded-full transition-all ${
+                      index === activeImage ? 'w-7 bg-white' : 'w-2 bg-white/35'
+                    }`} />
+                  </button>
                 ))}
               </div>
             )}

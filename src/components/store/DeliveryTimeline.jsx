@@ -18,7 +18,7 @@ export default function DeliveryTimeline() {
       <p className="text-sm font-semibold text-foreground">Livraison estimée</p>
       <div className="relative mt-4">
 <div className="absolute left-[16%] right-[16%] top-4 h-0.5 rounded-full overflow-hidden bg-border" aria-hidden="true">
-          <span className="absolute inset-y-0 w-1/4 animate-slide-x bg-gradient-to-r from-transparent via-primary to-transparent" />
+          <span className="absolute inset-y-0 left-0 w-1/4 animate-slide-x bg-gradient-to-r from-transparent via-primary to-transparent" />
         </div>
         <ol className="relative grid grid-cols-3 text-center">
           {steps.map(({ icon: Icon, label, date }, i) => (

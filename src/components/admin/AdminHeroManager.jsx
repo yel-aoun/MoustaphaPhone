@@ -124,14 +124,14 @@ export default function AdminHeroManager() {
   return (
     <div className="space-y-8 text-slate-100">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-xl font-bold text-white">Hero Section</h2>
           <p className="text-sm text-slate-400 mt-0.5">
             Personnalisez le message fixe et choisissez les produits qui défilent.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             variant="ghost"
             size="sm"

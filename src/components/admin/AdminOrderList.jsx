@@ -4,6 +4,16 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { Package, Phone, User, Clock, ChevronDown, ChevronUp, Trash2, RefreshCw, Eye, MessageCircle, FileText } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { storeBrand } from '@/lib/brand';
 
 const STATUS_CONFIG = {
@@ -49,8 +59,8 @@ function OrderRow({ order, onStatusChange, onDelete, onOpen }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="font-mono text-sm font-bold text-white">
+        <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0 sm:gap-3">
+          <span className="mr-auto whitespace-nowrap font-mono text-sm font-bold text-white sm:mr-0">
             {Number(order.total).toLocaleString('fr-MA')} DH
           </span>
 
@@ -69,14 +79,14 @@ function OrderRow({ order, onStatusChange, onDelete, onOpen }) {
 
           <button
             onClick={() => onOpen(order)}
-            className="h-7 rounded-2xl border border-white/10 px-2 text-xs font-semibold text-slate-400 transition-colors hover:border-primary/30 hover:text-primary"
+            className="h-8 rounded-2xl border border-white/10 px-2.5 text-xs font-semibold text-slate-400 transition-colors hover:border-primary/30 hover:text-primary"
           >
             Détails
           </button>
 
           <button
-            onClick={() => onDelete(order.id)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            onClick={() => onDelete(order)}
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
             aria-label="Supprimer la commande"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -84,7 +94,7 @@ function OrderRow({ order, onStatusChange, onDelete, onOpen }) {
 
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-white transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-white transition-colors"
             aria-label={expanded ? 'Réduire' : 'Afficher les produits'}
           >
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -119,6 +129,7 @@ export default function AdminOrderList() {
   const [filter, setFilter] = useState('all');
   const [quickFilter, setQuickFilter] = useState('all');
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [deletingOrder, setDeletingOrder] = useState(null);
 
   const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['admin-orders'],
@@ -247,7 +258,7 @@ export default function AdminOrderList() {
               key={order.id}
               order={order}
               onStatusChange={(id, status) => updateMutation.mutate({ id, status })}
-              onDelete={(id) => deleteMutation.mutate(id)}
+              onDelete={setDeletingOrder}
               onOpen={(nextOrder) => setSelectedOrderId(nextOrder.id)}
             />
           ))}
@@ -283,7 +294,7 @@ export default function AdminOrderList() {
                       href={buildOrderWhatsAppLink(selectedOrder)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-10 items-center gap-2 rounded-lg bg-green-500 px-3 text-sm font-semibold text-white hover:bg-green-600"
+                      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-green-500 px-3 text-sm font-semibold text-white hover:bg-green-600"
                     >
                       <MessageCircle className="h-4 w-4" />
                       WhatsApp
@@ -383,6 +394,29 @@ export default function AdminOrderList() {
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={!!deletingOrder} onOpenChange={(open) => !open && setDeletingOrder(null)}>
+        <AlertDialogContent className="border-white/10 bg-[#111a30] text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer la commande ?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              La commande de <span className="font-semibold text-slate-300">{deletingOrder?.customer_name}</span> sera
+              définitivement supprimée. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/10 hover:text-white">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate(deletingOrder.id)}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

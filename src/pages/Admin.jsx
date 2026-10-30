@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, LogOut, LayoutGrid, CirclePlus, BarChart2, Tag, SlidersHorizontal, ShoppingBag, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -18,6 +18,15 @@ export default function Admin() {
   const [session, setSession] = useState(undefined); // undefined = loading
   const [activeView, setActiveView] = useState('dashboard');
   const [editingProduct, setEditingProduct] = useState(null);
+  const mobileNavRef = useRef(null);
+
+  // Each view starts at the top, and the phone tab strip keeps the active tab in sight
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+    mobileNavRef.current
+      ?.querySelector('[data-active="true"]')
+      ?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [activeView, editingProduct?.id]);
 
   useEffect(() => {
     let mounted = true;
@@ -43,8 +52,11 @@ export default function Admin() {
   useEffect(() => {
     const root = document.documentElement;
     const hadDark = root.classList.contains('dark');
-    root.classList.add('dark');
-    return () => { if (!hadDark) root.classList.remove('dark'); };
+    root.classList.add('dark', 'admin-open');
+    return () => {
+      root.classList.remove('admin-open');
+      if (!hadDark) root.classList.remove('dark');
+    };
   }, []);
 
   const handleLogout = () => {
@@ -106,6 +118,8 @@ export default function Admin() {
         key={id}
         type="button"
         onClick={() => (id === 'add' ? handleCreateTab() : setActiveView(id))}
+        data-active={isActive}
+        aria-current={isActive ? 'page' : undefined}
         className={`relative flex shrink-0 items-center gap-3 rounded-2xl font-medium transition-colors ${
           compact ? 'h-9 px-3 text-xs' : 'h-11 w-full px-3.5 text-sm'
         } ${isActive ? 'text-white' : 'text-slate-400 hover:text-white'}`}
@@ -129,7 +143,7 @@ export default function Admin() {
   const openPalette = () => window.dispatchEvent(new Event(ADMIN_PALETTE_EVENT));
 
   return (
-    <div className="admin-shell dark relative min-h-screen bg-[#07090f] text-slate-100">
+    <div className="admin-shell dark relative min-h-screen overflow-x-clip bg-[#07090f] text-slate-100">
       {/* Control-room backdrop */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <CircuitBackground className="text-slate-400 opacity-40" />
@@ -200,7 +214,7 @@ export default function Admin() {
                   </button>
                 </div>
               </div>
-              <div className="no-scrollbar flex items-center gap-1 overflow-x-auto border-t border-white/10 px-2 py-2">
+              <div ref={mobileNavRef} className="no-scrollbar flex items-center gap-1 overflow-x-auto border-t border-white/10 px-2 py-2">
                 {tabs.map(({ id, label, icon }) => navButton(id, label, icon, true))}
               </div>
             </div>

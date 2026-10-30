@@ -53,7 +53,7 @@ export default function Footer() {
       <footer className="relative bg-secondary">
         {/* Live circuit line along the top edge */}
 <div className="absolute inset-x-0 top-0 h-px overflow-hidden bg-border" aria-hidden="true">
-          <span className="absolute inset-y-0 w-1/5 animate-slide-x bg-gradient-to-r from-transparent via-primary to-transparent" style={{ animationDuration: '6s' }} />
+          <span className="absolute inset-y-0 left-0 w-1/5 animate-slide-x bg-gradient-to-r from-transparent via-primary to-transparent" style={{ animationDuration: '6s' }} />
         </div>
         <div className="container-store py-12">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
@@ -73,11 +73,11 @@ export default function Footer() {
 
             <div>
               <h4 className="mb-4 text-xs font-semibold text-foreground">Boutique</h4>
-              <ul className="space-y-2.5">
-                <li><Link to="/boutique" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Tous les produits</Link></li>
+              <ul className="space-y-1 sm:space-y-2.5">
+                <li><Link to="/boutique" className="inline-block py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:py-0">Tous les produits</Link></li>
                 {categories.map((cat) => (
                   <li key={cat.name}>
-                    <Link to={`/category/${slugify(cat.name)}`} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    <Link to={`/category/${slugify(cat.name)}`} className="inline-block py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:py-0">
                       {cat.name}
                     </Link>
                   </li>
@@ -87,12 +87,12 @@ export default function Footer() {
 
             <div>
               <h4 className="mb-4 text-xs font-semibold text-foreground">Aide</h4>
-              <ul className="space-y-2.5">
-                <li><Link to="/track-order" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Suivre une commande</Link></li>
-                <li><Link to="/panier" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Mon panier</Link></li>
+              <ul className="space-y-1 sm:space-y-2.5">
+                <li><Link to="/track-order" className="inline-block py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:py-0">Suivre une commande</Link></li>
+                <li><Link to="/panier" className="inline-block py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:py-0">Mon panier</Link></li>
                 {Object.keys(LEGAL_PAGES).slice(0, 1).concat('Nous contacter').map((link) => (
                   <li key={link}>
-                    <button onClick={() => setOpenModal(link)} className="text-left text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    <button onClick={() => setOpenModal(link)} className="py-1.5 text-left text-sm text-muted-foreground transition-colors hover:text-foreground sm:py-0">
                       {link}
                     </button>
                   </li>
@@ -102,10 +102,10 @@ export default function Footer() {
 
             <div>
               <h4 className="mb-4 text-xs font-semibold text-foreground">Informations</h4>
-              <ul className="space-y-2.5">
+              <ul className="space-y-1 sm:space-y-2.5">
                 {['Conditions générales de vente', 'Politique de confidentialité'].map((link) => (
                   <li key={link}>
-                    <button onClick={() => setOpenModal(link)} className="text-left text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    <button onClick={() => setOpenModal(link)} className="py-1.5 text-left text-sm text-muted-foreground transition-colors hover:text-foreground sm:py-0">
                       {link}
                     </button>
                   </li>

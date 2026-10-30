@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Loader2, X, Upload, ImagePlus, Flame, Palette, ListChecks, ArrowLeft, ArrowRight, AlertTriangle, Tag } from 'lucide-react';
+import { Plus, Loader2, X, Upload, ImagePlus, Flame, Palette, ListChecks, ArrowLeft, ArrowRight, AlertTriangle, Tag, RotateCcw } from 'lucide-react';
 import { suggestColorName } from '@/lib/colorNames';
-import { base44 } from '@/api/base44Client';
+import { base44, compressImageToDataUrl } from '@/api/base44Client';
+import { storagePrefix } from '@/lib/brand';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCategories } from '@/hooks/useCategories';
 import { toast } from 'sonner';
@@ -25,6 +26,11 @@ const PRODUCT_BADGES = [
   { value: 'limited_stock', label: 'Stock limité' },
   { value: 'recommended', label: 'Recommandé' },
 ];
+
+const DRAFT_KEY = `${storagePrefix}_product_draft`;
+
+let imageSeq = 0;
+const nextImageId = () => `img-${Date.now()}-${imageSeq++}`;
 
 const createEmptyForm = () => ({
   name: '',
@@ -48,7 +54,7 @@ const productToForm = (product) => ({
   description: product?.description || '',
   images: [product?.image_url, ...(product?.extra_images || [])]
     .filter(Boolean)
-    .map((url) => ({ preview: url, file: null, url })),
+    .map((url) => ({ id: nextImageId(), preview: url, url, status: 'ready' })),
   colors: Array.isArray(product?.colors)
     ? product.colors.map((c) => ({
         ...c,
@@ -60,6 +66,45 @@ const productToForm = (product) => ({
     : [],
   badges: Array.isArray(product?.badges) ? product.badges : [],
 });
+
+// A new product's draft survives a reload (iOS Safari can reload a tab it evicted for memory).
+// Only uploaded photos can be kept, so colour links are remapped to the photos that remain.
+function formToDraft(form) {
+  const kept = [];
+  const indexMap = new Map();
+  form.images.forEach((img, idx) => {
+    if (!img.url) return;
+    indexMap.set(idx, kept.length);
+    kept.push({ id: img.id, preview: img.url, url: img.url, status: 'ready' });
+  });
+  const hasContent = form.name || form.description || form.originalPrice || kept.length > 0 || form.specs.length > 0;
+  if (!hasContent) return null;
+  return {
+    ...form,
+    images: kept,
+    colors: form.colors.map((c) => ({
+      ...c,
+      imageIndices: (c.imageIndices || []).filter((i) => indexMap.has(i)).map((i) => indexMap.get(i)),
+    })),
+  };
+}
+
+function loadDraft() {
+  try {
+    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    return draft && Array.isArray(draft.images) ? { ...createEmptyForm(), ...draft } : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // Storage unavailable (private mode); nothing to clear
+  }
+}
 
 function upsertProductInCache(current = [], savedProduct) {
   if (!savedProduct?.id) return current;
@@ -74,14 +119,38 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
   const queryClient = useQueryClient();
   const { data: categories = [] } = useCategories();
   const [loading, setLoading] = useState(false);
-  const [uploadingIdx, setUploadingIdx] = useState(null);
-  const [form, setForm] = useState(() => (product ? productToForm(product) : createEmptyForm()));
+  const [form, setForm] = useState(() => (product ? productToForm(product) : loadDraft() || createEmptyForm()));
+  const [draftRestored, setDraftRestored] = useState(() => !product && Boolean(loadDraft()));
+  // Per photo: the shrink-and-upload promise and the shrunk data URL (kept for a retry on save)
+  const uploadsRef = useRef(new Map());
+  const dataUrlsRef = useRef(new Map());
   const isEditing = Boolean(product?.id);
 
   useEffect(() => {
-    setForm(product ? productToForm(product) : createEmptyForm());
-    setUploadingIdx(null);
+    const draft = product ? null : loadDraft();
+    setForm(product ? productToForm(product) : draft || createEmptyForm());
+    setDraftRestored(Boolean(draft));
   }, [product]);
+
+  useEffect(() => {
+    if (isEditing) return undefined;
+    const timer = setTimeout(() => {
+      try {
+        const draft = formToDraft(form);
+        if (draft) localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        else localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        // Storage full or unavailable; the draft is a convenience only
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [form, isEditing]);
+
+  const discardDraft = () => {
+    clearDraft();
+    setForm(createEmptyForm());
+    setDraftRestored(false);
+  };
 
   // Derived values
   const originalPrice = parseFloat(form.originalPrice) || 0;
@@ -89,35 +158,90 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
   const hasDiscount = form.salePrice !== '' && salePrice > 0 && originalPrice > salePrice;
   const discountPct = hasDiscount ? Math.round(((originalPrice - salePrice) / originalPrice) * 100) : 0;
 
-  const handleFileChange = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    const newImages = files.map((file) => ({
-      preview: URL.createObjectURL(file),
-      file,
-      url: null,
-    }));
-    setForm((prev) => ({ ...prev, images: [...prev.images, ...newImages] }));
-    e.target.value = '';
-  };
-
-  const handleAddUrl = () => {
+  const updateImage = (id, patch) => {
     setForm((prev) => ({
       ...prev,
-      images: [...prev.images, { preview: null, file: null, url: '' }],
+      images: prev.images.map((img) => (img.id === id ? { ...img, ...patch } : img)),
     }));
   };
 
-  const handleUrlChange = (idx, value) => {
-    setForm((prev) => {
-      const images = [...prev.images];
-      images[idx] = { ...images[idx], url: value, preview: value };
-      return { ...prev, images };
-    });
+  const uploadDataUrl = async (id, dataUrl) => {
+    updateImage(id, { status: 'uploading' });
+    const { file_url } = await base44.integrations.Core.UploadFile({ dataUrl });
+    updateImage(id, { url: file_url, status: 'ready' });
+    return file_url;
   };
 
+  // Phone photos are shrunk one at a time as soon as they are picked, then uploaded in the
+  // background. Holding several full-size 12MP previews is what made iOS Safari reload the tab.
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!files.length) return;
+    const pending = files.map((file) => ({ file, id: nextImageId() }));
+    setForm((prev) => ({
+      ...prev,
+      images: [...prev.images, ...pending.map(({ id }) => ({ id, preview: null, url: null, status: 'processing' }))],
+    }));
+
+    for (const { file, id } of pending) {
+      let dataUrl;
+      try {
+        dataUrl = await compressImageToDataUrl(file);
+      } catch {
+        updateImage(id, { status: 'error' });
+        uploadsRef.current.set(id, Promise.reject(new Error(`Image illisible : ${file.name}`)));
+        uploadsRef.current.get(id).catch(() => {});
+        continue;
+      }
+      dataUrlsRef.current.set(id, dataUrl);
+      updateImage(id, { preview: dataUrl, status: 'uploading' });
+      const upload = uploadDataUrl(id, dataUrl).catch((error) => {
+        updateImage(id, { status: 'error' });
+        throw error;
+      });
+      upload.catch(() => {});
+      uploadsRef.current.set(id, upload);
+    }
+  };
+
+  // Waits for a photo's background upload, retrying once from the shrunk copy if it failed
+  const resolveImageUrl = async (img) => {
+    if (img.url) return img.url;
+    try {
+      const url = await uploadsRef.current.get(img.id);
+      if (url) return url;
+    } catch {
+      // Fall through to a retry
+    }
+    const dataUrl = dataUrlsRef.current.get(img.id);
+    if (!dataUrl) throw new Error("Une image n'a pas pu être préparée. Retirez-la et réessayez.");
+    return uploadDataUrl(img.id, dataUrl);
+  };
+
+  const imagesBusy = form.images.some((img) => img.status === 'processing' || img.status === 'uploading');
+
+  // Colour swatches link photos by position, so their links follow the photos when the order changes
+  const remapColorImages = (colors, mapIndex) =>
+    colors.map((c) => ({
+      ...c,
+      imageIndices: (c.imageIndices || [])
+        .map(mapIndex)
+        .filter((i) => i !== null)
+        .sort((a, b) => a - b),
+    }));
+
   const removeImage = (idx) => {
-    setForm((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }));
+    const removed = form.images[idx];
+    if (removed) {
+      uploadsRef.current.delete(removed.id);
+      dataUrlsRef.current.delete(removed.id);
+    }
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== idx),
+      colors: remapColorImages(prev.colors, (i) => (i === idx ? null : i > idx ? i - 1 : i)),
+    }));
   };
 
   const moveImage = (idx, direction) => {
@@ -126,7 +250,11 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
       if (target < 0 || target >= prev.images.length) return prev;
       const images = [...prev.images];
       [images[idx], images[target]] = [images[target], images[idx]];
-      return { ...prev, images };
+      return {
+        ...prev,
+        images,
+        colors: remapColorImages(prev.colors, (i) => (i === idx ? target : i === target ? idx : i)),
+      };
     });
   };
 
@@ -179,17 +307,9 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
 
     try {
       const resolvedUrls = [];
-      for (let i = 0; i < form.images.length; i++) {
-        const img = form.images[i];
-        if (img.file) {
-          setUploadingIdx(i);
-          const { file_url } = await base44.integrations.Core.UploadFile({ file: img.file });
-          resolvedUrls.push(file_url);
-        } else if (img.url) {
-          resolvedUrls.push(img.url);
-        }
+      for (const img of form.images) {
+        resolvedUrls.push(await resolveImageUrl(img));
       }
-      setUploadingIdx(null);
 
       const [mainImage, ...extraImages] = resolvedUrls;
 
@@ -230,6 +350,8 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
         queryClient.invalidateQueries({ queryKey: ['admin-products'] }),
         queryClient.invalidateQueries({ queryKey: ['products'] }),
       ]);
+      clearDraft();
+      setDraftRestored(false);
       if (submitAction === 'stay') {
         setForm(productToForm(savedProduct));
         onStayEditing?.(savedProduct);
@@ -241,18 +363,17 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
       toast.error(error.message || 'Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setLoading(false);
-      setUploadingIdx(null);
     }
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 rounded-2xl border border-white/12 bg-white/[0.05] p-6 shadow-[0_20px_70px_rgba(2,6,23,0.45)] backdrop-blur-sm sm:p-7"
+      className="space-y-6 rounded-2xl border border-white/12 bg-white/[0.05] p-4 shadow-[0_20px_70px_rgba(2,6,23,0.45)] backdrop-blur-sm sm:p-7"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-3xl font-semibold tracking-tight text-white">
+          <h3 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
             {isEditing ? 'Modifier le produit' : 'Ajouter un produit'}
           </h3>
           <p className="mt-1 text-sm text-slate-400">
@@ -271,6 +392,20 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
           </button>
         ) : null}
       </div>
+
+      {draftRestored && !isEditing && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-sm text-slate-200">
+          <span>Brouillon restauré — vous pouvez reprendre où vous en étiez.</span>
+          <button
+            type="button"
+            onClick={discardDraft}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-slate-300 hover:bg-white/10 hover:text-white"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Recommencer
+          </button>
+        </div>
+      )}
 
       {/* Name */}
       <div className="space-y-2">
@@ -324,64 +459,49 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
         {form.images.length > 0 && (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {form.images.map((img, idx) => (
-              <div key={idx} className="relative group">
-                {img.file ? (
-                  <div
-                    className={`aspect-square overflow-hidden rounded-xl border ${
-                      idx === 0 ? 'border-primary/70' : 'border-white/10'
-                    } bg-[#131c31]`}
-                  >
-                    <img src={img.preview} alt="" className="h-full w-full object-cover" />
-                    {uploadingIdx === idx && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-[#0d1017]/80">
-                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div
-                    className={`relative aspect-square overflow-hidden rounded-xl border ${
-                      idx === 0 ? 'border-primary/70' : 'border-white/10'
-                    } bg-[#131c31]`}
-                  >
-                    {img.url ? (
-                      <img
-                        src={img.url}
-                        alt=""
-                        className="h-full w-full object-cover"
-                        onError={(e) => (e.target.style.display = 'none')}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <ImagePlus className="h-6 w-6 text-slate-500" />
-                      </div>
-                    )}
-                    <input
-                      type="text"
-                      value={img.url || ''}
-                      onChange={(e) => handleUrlChange(idx, e.target.value)}
-                      placeholder="https://..."
-                      className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#0d1017]/95 px-2 py-1 text-[10px] text-slate-200 outline-none placeholder:text-slate-500"
+              <div key={img.id} className="relative group">
+                <div
+                  className={`relative aspect-square overflow-hidden rounded-xl border ${
+                    img.status === 'error' ? 'border-red-500/70' : idx === 0 ? 'border-primary/70' : 'border-white/10'
+                  } bg-[#131c31]`}
+                >
+                  {img.preview ? (
+                    <img
+                      src={img.preview}
+                      alt=""
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                      onError={(e) => (e.target.style.display = 'none')}
                     />
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <ImagePlus className="h-6 w-6 text-slate-500" />
+                    </div>
+                  )}
+                  {(img.status === 'processing' || img.status === 'uploading') && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#0d1017]/70 text-[10px] font-medium text-slate-200">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      {img.status === 'processing' ? 'Préparation…' : 'Envoi…'}
+                    </div>
+                  )}
+                  {img.status === 'error' && (
+                    <div className="absolute inset-x-0 top-0 flex items-center justify-center gap-1 bg-red-500/90 px-1 py-0.5 text-[9px] font-semibold text-white">
+                      <AlertTriangle className="h-2.5 w-2.5" />
+                      Réessai à l'envoi
+                    </div>
+                  )}
+                </div>
                 {idx === 0 && (
                   <span className="absolute -top-2 left-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
                     Main
                   </span>
                 )}
-                {img.file && img.file.size > 900_000 && (
-                  <span className="absolute bottom-8 left-1 right-1 flex items-center justify-center gap-1 rounded-md bg-orange-500/90 px-1 py-0.5 text-[9px] font-semibold text-white">
-                    <AlertTriangle className="h-2.5 w-2.5" />
-                    grande image
-                  </span>
-                )}
-                <div className="absolute bottom-1 left-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="absolute bottom-1 left-1 flex gap-1 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
                   <button
                     type="button"
                     onClick={() => moveImage(idx, -1)}
                     disabled={idx === 0}
-                    className="flex h-6 w-6 items-center justify-center rounded-md bg-[#0d1017]/90 text-white disabled:opacity-30"
+                    className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0d1017]/90 text-white disabled:opacity-30"
                     aria-label="Déplacer l'image vers la gauche"
                   >
                     <ArrowLeft className="h-3 w-3" />
@@ -390,7 +510,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                     type="button"
                     onClick={() => moveImage(idx, 1)}
                     disabled={idx === form.images.length - 1}
-                    className="flex h-6 w-6 items-center justify-center rounded-md bg-[#0d1017]/90 text-white disabled:opacity-30"
+                    className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0d1017]/90 text-white disabled:opacity-30"
                     aria-label="Déplacer l'image vers la droite"
                   >
                     <ArrowRight className="h-3 w-3" />
@@ -399,7 +519,8 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                 <button
                   type="button"
                   onClick={() => removeImage(idx)}
-                  className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute -right-1.5 -top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-destructive text-white transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
+                  aria-label="Retirer l'image"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -408,26 +529,18 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
           </div>
         )}
 
-        <div className="flex gap-2">
-          <label className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-sm font-medium text-slate-300 transition-colors hover:border-primary/40 hover:text-white">
+        <div>
+          <label className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-sm font-medium text-slate-300 transition-colors hover:border-primary/40 hover:text-white">
             <Upload className="h-4 w-4" />
             Importer des fichiers
             <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
           </label>
-          <button
-            type="button"
-            onClick={handleAddUrl}
-            className="flex h-11 items-center gap-2 rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 text-sm font-medium text-slate-300 transition-colors hover:border-primary/40 hover:text-white"
-          >
-            <Plus className="h-4 w-4" />
-            URL
-          </button>
         </div>
       </div>
 
       {/* Specs */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Label className="text-sm font-medium text-slate-300 flex items-center gap-1.5">
             <ListChecks className="w-3.5 h-3.5 text-slate-400" />
             Fiche technique
@@ -436,7 +549,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
           <button
             type="button"
             onClick={addSpec}
-            className="flex items-center gap-1.5 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-primary/40 hover:text-white transition-colors"
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-primary/40 hover:text-white transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             Ajouter
@@ -445,7 +558,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
         {form.specs.length > 0 ? (
           <div className="space-y-2">
             {form.specs.map((spec, idx) => (
-              <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+              <div key={idx} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2">
                 <Input
                   value={spec.name}
                   onChange={(e) => updateSpec(idx, 'name', e.target.value)}
@@ -461,6 +574,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                 <button
                   type="button"
                   onClick={() => removeSpec(idx)}
+                  aria-label="Retirer la ligne"
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-destructive/20 hover:text-red-400"
                 >
                   <X className="h-4 w-4" />
@@ -477,7 +591,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
 
       {/* Colors */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Label className="text-sm font-medium text-slate-300 flex items-center gap-1.5">
             <Palette className="w-3.5 h-3.5 text-slate-400" />
             Couleurs disponibles
@@ -486,7 +600,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
           <button
             type="button"
             onClick={addColor}
-            className="flex items-center gap-1.5 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-primary/40 hover:text-white transition-colors"
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-primary/40 hover:text-white transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             Ajouter une couleur
@@ -516,7 +630,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                     value={color.name}
                     onChange={(e) => updateColor(idx, 'name', e.target.value)}
                     placeholder={`${suggestColorName(color.hex)} (nom automatique)`}
-                    className="flex-1 h-8 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500 text-sm"
+                    className="min-w-0 flex-1 h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500 text-sm"
                   />
                   {/* Hex display */}
                   <span className="font-mono text-xs text-slate-500 hidden sm:block w-16 text-right">{color.hex}</span>
@@ -524,7 +638,8 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
                   <button
                     type="button"
                     onClick={() => removeColor(idx)}
-                    className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-destructive/20 text-slate-500 hover:text-red-400 transition-colors"
+                    aria-label="Retirer la couleur"
+                    className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full hover:bg-destructive/20 text-slate-500 hover:text-red-400 transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -633,6 +748,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
             <Input
               required
               type="number"
+              inputMode="decimal"
               min="0"
               step="0.01"
               value={form.originalPrice}
@@ -648,6 +764,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
             </p>
             <Input
               type="number"
+              inputMode="decimal"
               min="0"
               step="0.01"
               value={form.salePrice}
@@ -727,7 +844,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
         >
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enregistrement...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {imagesBusy ? 'Envoi des images...' : 'Enregistrement...'}
             </>
           ) : (
             <>

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import { DEFAULT_HERO_CONFIG } from '@/lib/heroStore';
 import { cloudinaryImage, productImageSrcSet } from '@/lib/images';
@@ -31,12 +31,11 @@ function BatteryTimer({ running, slideKey }) {
   return (
     <span className="relative flex h-4 w-8 items-center rounded-[4px] border-[1.5px] border-current p-[2px]" aria-hidden="true">
       <span className="absolute -right-[4px] top-1/2 h-1.5 w-[3px] -translate-y-1/2 rounded-r-sm bg-current" />
-      <motion.span
+      {/* CSS keyframes run on the compositor; a JS-driven fill kept the main thread busy every frame */}
+      <span
         key={`${slideKey}-${running}`}
-        className="h-full rounded-[2px] bg-emerald-500"
-        initial={{ width: running ? '0%' : '100%' }}
-        animate={{ width: '100%' }}
-        transition={{ duration: running ? SLIDE_MS / 1000 : 0, ease: 'linear' }}
+        className={`h-full w-full origin-left rounded-[2px] bg-emerald-500 ${running ? 'animate-battery-fill' : ''}`}
+        style={running ? { animationDuration: `${SLIDE_MS}ms` } : undefined}
       />
     </span>
   );
@@ -56,16 +55,20 @@ export default function HeroSlider({ products = [], heroConfig, totalProducts = 
 
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  // Autoplay only while the hero is on screen, so scrolling past it lets the phone rest
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { amount: 0.2 });
+  const autoplay = !paused && inView;
 
   useEffect(() => {
     if (index >= slides.length && slides.length > 0) setIndex(0);
   }, [slides.length, index]);
 
   useEffect(() => {
-    if (slides.length < 2 || paused) return undefined;
+    if (slides.length < 2 || !autoplay) return undefined;
     const timer = setInterval(() => setIndex((i) => (i + 1) % slides.length), SLIDE_MS);
     return () => clearInterval(timer);
-  }, [slides.length, paused]);
+  }, [slides.length, autoplay]);
 
   const product = slides[index];
   const title = cfg.defaultTitle || DEFAULT_HERO_CONFIG.defaultTitle;
@@ -79,7 +82,7 @@ export default function HeroSlider({ products = [], heroConfig, totalProducts = 
   const go = (dir) => setIndex((i) => (i + dir + slides.length) % slides.length);
 
   return (
-    <section className="relative overflow-hidden bg-secondary">
+    <section ref={sectionRef} className="relative overflow-hidden bg-secondary">
       <CircuitBackground className="text-foreground [mask-image:linear-gradient(90deg,transparent_30%,#000_70%)] max-lg:[mask-image:linear-gradient(180deg,#000_30%,transparent_70%)]" />
       <div className="pointer-events-none absolute -right-40 top-1/2 h-[560px] w-[560px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.16),transparent_65%)]" />
       {/* Slow aurora glows */}
@@ -218,7 +221,7 @@ export default function HeroSlider({ products = [], heroConfig, totalProducts = 
                   <button type="button" onClick={() => go(-1)} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary" aria-label="Produit précédent">
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <BatteryTimer running={!paused && !reduce} slideKey={index} />
+                  <BatteryTimer running={autoplay && !reduce} slideKey={index} />
                   <button type="button" onClick={() => go(1)} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary" aria-label="Produit suivant">
                     <ChevronRight className="h-4 w-4" />
                   </button>

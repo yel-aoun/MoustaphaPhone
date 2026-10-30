@@ -242,7 +242,7 @@ export default function Cart() {
                       </div>
 
                       {itemColors.length > 1 && (
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <div className="mt-3 flex flex-wrap items-center gap-3 sm:gap-2">
                           {itemColors.map((color) => (
                             <button
                               key={color.name}
@@ -250,7 +250,7 @@ export default function Cart() {
                               onClick={() => updateVariant?.(itemKey, color, catalogProduct)}
                               title={color.name}
                               aria-label={`Choisir ${color.name}`}
-                              className={`h-5 w-5 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/30 transition ${
+                              className={`h-8 w-8 rounded-full ring-1 sm:h-6 sm:w-6 ring-inset ring-black/10 dark:ring-white/30 transition ${
                                 getCartItemKey({ id: item.id, selectedColor: color.name, selectedColorHex: color.hex }) === itemKey
                                   ? 'outline outline-2 outline-offset-2 outline-foreground'
                                   : ''
@@ -271,7 +271,7 @@ export default function Cart() {
                             <Plus className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                        <button onClick={() => removeFromCart(itemKey)} className="text-sm font-medium text-primary hover:underline">
+                        <button onClick={() => removeFromCart(itemKey)} className="-mr-2 min-h-10 px-2 text-sm font-medium text-primary hover:underline">
                           Retirer
                         </button>
                       </div>
@@ -371,7 +371,7 @@ export default function Cart() {
               </div>
             </div>
             {!isForm && (
-              <button type="button" onClick={clearCart} className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={clearCart} className="mt-2 min-h-10 w-full text-center text-sm text-muted-foreground hover:text-foreground">
                 Vider le panier
               </button>
             )}

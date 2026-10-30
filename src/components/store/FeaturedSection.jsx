@@ -14,7 +14,7 @@ export default function FeaturedSection({ title, subtitle, products, onAddToCart
           {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
         </div>
         {viewAllTo && (
-          <Link to={viewAllTo} className="flex shrink-0 items-center text-sm font-medium text-primary hover:underline">
+          <Link to={viewAllTo} className="-my-2 flex min-h-10 shrink-0 items-center text-sm font-medium text-primary hover:underline">
             Tout voir <ChevronRight className="h-4 w-4" />
           </Link>
         )}

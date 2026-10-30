@@ -17,7 +17,7 @@ export default function HowItWorks() {
       <div className="relative mt-10">
         {/* Connection line with a travelling pulse */}
 <div className="absolute left-[16%] right-[16%] top-7 hidden h-0.5 rounded-full sm:block overflow-hidden bg-border" aria-hidden="true">
-          <span className="absolute inset-y-0 w-1/4 animate-slide-x bg-gradient-to-r from-transparent via-primary to-transparent" />
+          <span className="absolute inset-y-0 left-0 w-1/4 animate-slide-x bg-gradient-to-r from-transparent via-primary to-transparent" />
         </div>
         <ol className="grid gap-8 sm:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, text }, i) => (

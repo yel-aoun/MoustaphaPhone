@@ -270,7 +270,7 @@ export default function AdminDashboard() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <Panel title="Commandes récentes">
           {stats.recentOrders.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 py-10 text-center text-sm text-slate-500">
@@ -342,7 +342,7 @@ export default function AdminDashboard() {
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Panel title="Répartition par catégorie">
           {stats.byCategory.length === 0 ? (
             <p className="text-sm text-slate-500">Aucun produit catégorisé.</p>
@@ -386,7 +386,7 @@ export default function AdminDashboard() {
       </div>
 
       <Panel title="Engagement boutique">
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div>
             <p className="mb-3 text-xs font-semibold tracking-normal text-slate-500">Produits les plus consultés</p>
             {(analytics?.topProducts || []).length === 0 ? (

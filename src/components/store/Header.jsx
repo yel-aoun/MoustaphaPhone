@@ -202,7 +202,7 @@ export default function Header({ products = [], onWishlistOpen }) {
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="mt-6 flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                className="mt-4 flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground"
               >
                 {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 {isDark ? 'Mode clair' : 'Mode sombre'}
