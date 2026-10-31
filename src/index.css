@@ -7,6 +7,7 @@
 html {
   font-size: 100%;
   scrollbar-gutter: stable;
+  scroll-padding-top: 8rem;
 }
 
 @layer base {
@@ -30,7 +31,9 @@ html {
     --border: 240 5% 89%;
     --input: 240 5% 89%;
     --ring: 211 70% 26%;
-    --deal: 14 85% 48%;
+    --deal: 14 80% 39%;
+    --promotion: 211 70% 26%;
+    --promotion-foreground: 0 0% 100%;
     --deal-foreground: 0 0% 100%;
     --surface: 240 5% 96%;
     --chart-1: 211 70% 26%;
@@ -69,7 +72,7 @@ html {
     --border: 240 3% 18%;
     --input: 240 3% 18%;
     --ring: 211 85% 62%;
-    --deal: 14 90% 58%;
+    --deal: 18 90% 65%;
     --deal-foreground: 240 4% 5%;
     --surface: 240 3% 10%;
     --chart-1: 211 85% 62%;
@@ -98,6 +101,7 @@ html {
 
   h1, h2, h3 {
     @apply tracking-tight;
+    text-wrap: balance;
   }
 
   ::selection {

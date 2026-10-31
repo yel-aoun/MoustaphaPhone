@@ -13,6 +13,7 @@ import WhatsAppFloat from '@/components/store/WhatsAppFloat';
 import ComparePanel from '@/components/store/ComparePanel';
 import CartIsland from '@/components/store/CartIsland';
 import PromotionStrip from '@/components/store/PromotionStrip';
+import { getProductOffer } from '@/lib/products';
 import { storagePrefix } from '@/lib/brand';
 
 const PROMO_DISMISSED_KEY = `${storagePrefix}_promotion_dismissed_v1`;
@@ -38,10 +39,8 @@ export default function StoreLayout({ children, hideTabBar = false, hideWhatsApp
     try { return sessionStorage.getItem(PROMO_DISMISSED_KEY) === '1'; } catch { return false; }
   });
   const maxDiscount = activeProducts.reduce((max, product) => {
-    const original = Number(product.original_price);
-    const price = Number(product.price);
-    if (product.status === 'out_of_stock' || !Number.isFinite(original) || !Number.isFinite(price) || original <= 0 || price < 0 || price >= original) return max;
-    return Math.max(max, Math.floor(((original - price) / original) * 100));
+    if (product.status === 'out_of_stock') return max;
+    return Math.max(max, getProductOffer(product)?.percent || 0);
   }, 0);
   const showPromotion = !promoDismissed && maxDiscount > 0;
   const dismissPromotion = () => {

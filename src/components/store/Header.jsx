@@ -1,5 +1,5 @@
 import { categoryLabel } from '@/lib/productCategories';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, Menu, Moon, Search, ShoppingBag, Sun, X } from 'lucide-react';
@@ -31,10 +31,23 @@ export default function Header({ products = [], onWishlistOpen, promotionVisible
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const headerRef = useRef(null);
   const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || '');
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    let previousY = window.scrollY;
+    const onScroll = () => {
+      const y = Math.max(0, window.scrollY);
+      setScrolled(y > 8);
+      if (y <= 160 || headerRef.current?.contains(document.activeElement)) {
+        setHidden(false);
+        previousY = y;
+      } else if (Math.abs(y - previousY) > 8) {
+        setHidden(y > previousY);
+        previousY = y;
+      }
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -64,13 +77,15 @@ export default function Header({ products = [], onWishlistOpen, promotionVisible
   useEffect(() => {
     setSearchOpen(false);
     setMenuOpen(false);
+    setHidden(false);
   }, [location.pathname, location.search]);
 
-  const iconButton = 'relative flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06]';
+  const iconButton = 'relative flex h-11 w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06]';
 
   return (
     <>
-      <header className={`fixed inset-x-0 z-50 px-3 pt-3 sm:px-5 ${promotionVisible ? 'top-11' : 'top-0'}`}>
+      <header ref={headerRef} onFocusCapture={() => setHidden(false)}
+        className={`fixed inset-x-0 z-50 px-3 pt-3 transition-transform duration-200 motion-reduce:transition-none sm:px-5 ${promotionVisible ? 'top-11' : 'top-0'} ${hidden && !menuOpen && !searchOpen ? '-translate-y-[calc(100%+3rem)]' : 'translate-y-0'}`}>
         <div
           className={`liquid-glass mx-auto flex h-14 max-w-[1200px] items-center justify-between gap-3 rounded-full pl-4 pr-2 transition-all duration-300 ${
             scrolled ? 'sm:max-w-[1000px]' : ''
@@ -135,7 +150,7 @@ export default function Header({ products = [], onWishlistOpen, promotionVisible
               <Heart className="h-[18px] w-[18px]" />
               {totalWishlist > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />}
             </button>
-            <Link to="/panier" className="relative flex h-10 items-center gap-2 rounded-full bg-foreground pl-3 pr-3.5 text-background transition-transform hover:scale-[1.03] active:scale-95" aria-label="Panier">
+            <Link to="/panier" className="relative flex h-11 items-center gap-2 rounded-full bg-foreground pl-3 pr-3.5 text-background transition-transform hover:scale-[1.03] active:scale-95" aria-label="Panier">
               <ShoppingBag className="h-4 w-4" />
               <motion.span
                 key={totalItems}

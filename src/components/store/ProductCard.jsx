@@ -5,7 +5,7 @@ import { showCartIsland } from '@/components/store/CartIsland';
 import { useWishlist } from '@/lib/wishlistStore';
 import { useCart } from '@/lib/cartStore';
 import { cloudinaryImage, productImageSrcSet } from '@/lib/images';
-import { formatMoney, getProductPath } from '@/lib/products';
+import { formatMoney, getProductPath, getProductOffer } from '@/lib/products';
 import { trackProductEvent } from '@/lib/storeEvents';
 import { getImageForColor } from '@/lib/productOptions';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -37,10 +37,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
   const colors = Array.isArray(product.colors) ? product.colors.filter((c) => c.name && c.hex) : [];
   const path = getProductPath(product);
 
-  const discount =
-    product.original_price && product.original_price > product.price
-      ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
-      : null;
+  const offer = getProductOffer(product);
 
   const addWithColor = (color) => {
     const item = color
@@ -74,6 +71,11 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
     <Link to={path} className="group flex h-full flex-col" aria-label={product.name}>
       <TiltCard className="rounded-2xl" max={6} glare={false}>
       <div className="photo-well spotlight relative aspect-[4/5] overflow-hidden rounded-2xl" onPointerMove={trackSpotlight}>
+        {offer?.percent > 0 && !isOutOfStock && (
+          <span className="absolute left-3 top-3 z-[2] rounded-lg bg-deal px-2.5 py-1.5 text-xs font-semibold tabular-nums text-deal-foreground">
+            −{offer.percent} %
+          </span>
+        )}
         {/* Light sweep on hover */}
         <span className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-1/3 -translate-x-[120%] bg-gradient-to-r from-transparent via-white/50 to-transparent group-hover:animate-shine" />
         {product.image_url ? (
@@ -98,7 +100,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
           type="button"
           onClick={handleWishlist}
           aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-          className={`absolute right-3 top-3 z-[2] flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-all active:scale-90 ${
+          className={`absolute right-3 top-3 z-[2] flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-sm transition-all active:scale-90 ${
             isWishlisted ? 'text-primary' : 'text-zinc-500 hover:text-zinc-900 md:opacity-0 md:group-hover:opacity-100'
           }`}
         >
@@ -109,9 +111,9 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
 
       <div className="flex flex-1 flex-col px-1 pt-3">
         {label && (
-          <p className={`text-[11px] font-semibold ${isOutOfStock ? 'text-muted-foreground' : 'text-deal'}`}>{label}</p>
+          <p className={`text-xs font-medium ${isOutOfStock ? 'text-muted-foreground' : 'text-primary'}`}>{label}</p>
         )}
-        <h3 className="mt-0.5 line-clamp-2 text-sm font-medium leading-snug text-foreground">{product.name}</h3>
+        <h3 className="mt-0.5 line-clamp-2 text-sm font-medium leading-snug text-foreground sm:text-base">{product.name}</h3>
 
         {colors.length > 0 && (
           <div className="mt-2 flex items-center gap-1.5">
@@ -129,11 +131,11 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <div className="min-w-0">
-            <p className="break-all text-sm font-semibold text-foreground">{formatMoney(product.price)}</p>
-            {discount !== null && (
-              <p className="text-[11px] text-muted-foreground">
+            <p className="break-words text-base font-semibold tabular-nums text-foreground sm:text-lg">{formatMoney(product.price)}</p>
+            {offer && (
+              <p className="text-xs tabular-nums text-muted-foreground">
+                <span className="sr-only">Ancien prix : </span>
                 <span className="line-through">{formatMoney(product.original_price)}</span>
-                <span className="ml-1.5 font-semibold text-deal">−{discount}%</span>
               </p>
             )}
           </div>
@@ -146,7 +148,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.9 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="liquid-glass absolute bottom-11 right-0 z-20 w-max max-w-[220px] rounded-2xl p-2"
+                  className="liquid-glass absolute bottom-12 right-0 z-20 w-max max-w-[220px] rounded-2xl p-2"
                   onClick={(event) => { event.preventDefault(); event.stopPropagation(); }}
                 >
                   <p className="px-1 pb-1.5 text-[11px] font-medium text-muted-foreground">Choisir la couleur</p>
@@ -158,7 +160,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
                         title={color.name}
                         aria-label={`Ajouter en ${color.name}`}
                         onClick={(event) => { event.preventDefault(); event.stopPropagation(); addWithColor(color); }}
-                        className="h-7 w-7 rounded-full ring-1 ring-inset ring-black/15 dark:ring-white/30 transition-transform hover:scale-110 active:scale-95"
+                        className="h-11 w-11 rounded-full ring-1 ring-inset ring-black/15 dark:ring-white/30 transition-transform hover:scale-110 active:scale-95"
                         style={{ backgroundColor: color.hex }}
                       />
                     ))}
@@ -171,7 +173,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
               onClick={handleAdd}
               aria-expanded={colors.length > 1 ? pickerOpen : undefined}
               aria-label={`Ajouter ${product.name} au panier`}
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all active:scale-90 ${
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all active:scale-90 ${
                 added || inCart
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-foreground text-background hover:bg-primary hover:text-primary-foreground'
@@ -182,6 +184,9 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
             </div>
           )}
         </div>
+        {offer && !isOutOfStock && (
+          <p className="mt-1 text-xs font-medium tabular-nums text-primary">Économisez <span className="whitespace-nowrap">{formatMoney(offer.savings)}</span></p>
+        )}
       </div>
     </Link>
   );

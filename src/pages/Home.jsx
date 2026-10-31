@@ -4,6 +4,7 @@ import { useCart } from '@/lib/cartStore';
 import { useHeroConfig } from '@/lib/heroStore';
 import { useSeo } from '@/lib/seo';
 import { storeBrand } from '@/lib/brand';
+import { getProductOffer } from '@/lib/products';
 import StoreLayout, { useStoreProducts } from '@/components/store/StoreLayout';
 import HeroSlider from '@/components/store/HeroSlider';
 import CategoryShowcase from '@/components/store/CategoryShowcase';
@@ -29,7 +30,7 @@ export default function Home() {
 
   const available = useMemo(() => activeProducts.filter((p) => p.status === 'active' || !p.status), [activeProducts]);
   const onSale = useMemo(
-    () => available.filter((p) => p.original_price && p.original_price > p.price),
+    () => available.filter((p) => getProductOffer(p)),
     [available]
   );
   const newest = useMemo(
@@ -38,7 +39,7 @@ export default function Home() {
   );
 
   const maxDiscount = onSale.length
-    ? Math.max(...onSale.map((p) => Math.round(((p.original_price - p.price) / p.original_price) * 100)))
+    ? Math.max(...onSale.map((p) => getProductOffer(p).percent))
     : 0;
 
   const heroProducts = useMemo(() => {

@@ -65,3 +65,15 @@ export function productMatchesSlug(product, slug) {
 export function formatMoney(value) {
   return `${Number(value || 0).toLocaleString('fr-MA')} MAD`;
 }
+
+// Use the same rounded percentage everywhere an offer is shown.
+export function getProductOffer(product) {
+  if (product?.price == null || product?.original_price == null) return null;
+  const price = Number(product.price);
+  const original = Number(product.original_price);
+  if (!Number.isFinite(price) || !Number.isFinite(original) || price < 0 || original <= price) return null;
+  return {
+    percent: Math.round(((original - price) / original) * 100),
+    savings: Math.round((original - price) * 100) / 100,
+  };
+}

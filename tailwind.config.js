@@ -11,6 +11,10 @@ export default {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
+        promotion: {
+          DEFAULT: "hsl(var(--promotion))",
+          foreground: "hsl(var(--promotion-foreground))",
+        },
         deal: {
           DEFAULT: "hsl(var(--deal))",
           foreground: "hsl(var(--deal-foreground))",

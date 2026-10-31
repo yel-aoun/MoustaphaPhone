@@ -28,7 +28,7 @@ function CategoryTile({ name, icon, count, covers }) {
   }, []);
   useEffect(() => {
     if (reduce || !inView || !visible || hovered || focused || paused || covers.length < 2) return;
-    const timer = setInterval(() => setIndex((current) => (current + 1) % covers.length), 5500);
+    const timer = setInterval(() => setIndex((current) => (current + 1) % covers.length), 3500);
     return () => clearInterval(timer);
   }, [reduce, inView, visible, hovered, focused, paused, covers.length]);
 
@@ -36,18 +36,22 @@ function CategoryTile({ name, icon, count, covers }) {
     <div ref={ref} className="relative min-w-0" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
       <Link to={`/category/${slugify(name)}`}
-        className="photo-well group flex h-[250px] flex-col overflow-hidden rounded-2xl p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:h-[290px] sm:p-5">
-        <span className="mb-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background/80 text-primary">
-          <Icon className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <span className="text-base font-semibold leading-tight sm:text-lg">{categoryLabel(name)}</span>
-        <span className="mt-1 text-xs text-muted-foreground dark:text-slate-600">{count} produit{count > 1 ? 's' : ''}</span>
-        <div className="relative mt-3 min-h-0 flex-1" aria-hidden="true">
+        className="photo-well group flex h-[270px] flex-col overflow-hidden rounded-2xl p-3 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:h-[320px] sm:p-4">
+        <div className={`flex min-h-12 shrink-0 items-start gap-2 sm:gap-2.5 ${covers.length > 1 && !reduce ? 'pr-9' : ''}`}>
+          <span className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background/80 text-primary sm:flex">
+            <Icon className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <span className="block break-words text-sm font-semibold leading-tight sm:text-base">{categoryLabel(name)}</span>
+            <span className="mt-1 block text-xs text-muted-foreground dark:text-slate-600">{count} produit{count > 1 ? 's' : ''}</span>
+          </div>
+        </div>
+        <div className="relative mt-2 min-h-0 flex-1" aria-hidden="true">
           {covers.length ? covers.map((cover, i) => (
             <img key={cover.image_url}
-              src={cloudinaryImage(cover.image_url, { width: 400, height: 400, crop: 'pad', transform: true })}
+              src={cloudinaryImage(cover.image_url, { width: 640, height: 640, crop: 'limit', transform: true })}
               alt="" loading="lazy" decoding="async"
-              className={`absolute inset-0 h-full w-full object-contain p-2 transition-opacity duration-700 motion-reduce:transition-none ${i === index % covers.length ? 'opacity-100' : 'opacity-0'}`} />
+              className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-500 motion-reduce:transition-none ${i === index % covers.length ? 'opacity-100' : 'opacity-0'}`} />
           )) : <Package className="absolute bottom-2 right-2 h-12 w-12 text-muted-foreground" />}
         </div>
       </Link>

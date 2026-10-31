@@ -1,3 +1,4 @@
+import { getProductOffer } from '@/lib/products';
 import { categoryLabel } from '@/lib/productCategories';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -124,10 +125,8 @@ export default function ProductDetail() {
   const isOutOfStock = product?.status === 'out_of_stock';
   const isWishlisted = product ? wishlist.some((item) => item.id === product.id) : false;
   const isCompared = product ? compareIds.includes(product.id) : false;
-  const discount =
-    product?.original_price && product.original_price > product.price
-      ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
-      : null;
+  const offer = getProductOffer(product);
+  const discount = offer?.percent > 0 ? offer.percent : null;
 
   const handleAdd = () => {
     if (!product || isOutOfStock) return;
