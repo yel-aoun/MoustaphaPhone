@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Circle, Package, Scale, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -137,7 +138,7 @@ export default function ComparePanel({ products = [] }) {
                   <div className="space-y-3 p-4">
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                        {product.category || 'Produit'}
+                        {categoryLabel(product.category) || 'Produit'}
                       </span>
                       <span
                         className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${

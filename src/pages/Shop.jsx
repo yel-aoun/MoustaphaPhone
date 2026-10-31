@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Check, ChevronDown, Search, X } from 'lucide-react';
@@ -68,7 +69,7 @@ export default function Shop() {
   }, [categories, categorySlug]);
 
   useSeo({
-    title: activeCategory === 'Tous' ? 'Boutique' : activeCategory,
+    title: activeCategory === 'Tous' ? 'Boutique' : categoryLabel(activeCategory),
     description: storeBrand.description,
     url: window.location.href,
   });
@@ -148,7 +149,7 @@ export default function Shop() {
               <>
                 <Link to="/boutique" className="hover:text-foreground">Boutique</Link>
                 <span className="mx-1.5">/</span>
-                <span className="text-foreground">{activeCategory}</span>
+                <span className="text-foreground">{categoryLabel(activeCategory)}</span>
               </>
             )}
           </nav>
@@ -160,7 +161,7 @@ export default function Shop() {
                     <BannerIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                   </span>
                 )}
-                {saleOnly && activeCategory === 'Tous' ? 'Promotions' : activeCategory === 'Tous' ? 'Boutique' : activeCategory}
+                {saleOnly && activeCategory === 'Tous' ? 'Promotions' : activeCategory === 'Tous' ? 'Boutique' : categoryLabel(activeCategory)}
               </h1>
               <p className="mt-3 text-sm text-muted-foreground sm:text-base">
                 <span className="font-semibold text-foreground"><CountUp to={sorted.length} duration={0.8} /></span> produit{sorted.length !== 1 ? 's' : ''} · livraison partout au Maroc
@@ -193,7 +194,7 @@ export default function Shop() {
               <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
                 <PopoverTrigger asChild>
                   <button type="button" className={pill(activeCategory !== 'Tous')}>
-                    {activeCategory === 'Tous' ? 'Catégorie' : activeCategory}
+                    {activeCategory === 'Tous' ? 'Catégorie' : categoryLabel(activeCategory)}
                     <ChevronDown className="h-3.5 w-3.5" />
                   </button>
                 </PopoverTrigger>
@@ -210,7 +211,7 @@ export default function Shop() {
                         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-primary">
                           {Icon ? <Icon className="h-3.5 w-3.5" /> : <Search className="h-3.5 w-3.5" />}
                         </span>
-                        <span className="flex-1">{name === 'Tous' ? 'Tous les produits' : name}</span>
+                        <span className="flex-1">{name === 'Tous' ? 'Tous les produits' : categoryLabel(name)}</span>
                         <span className="text-xs text-muted-foreground">{count}</span>
                         {activeCategory === name && <Check className="h-4 w-4 text-primary" />}
                       </button>

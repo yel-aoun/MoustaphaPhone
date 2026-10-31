@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
@@ -76,9 +77,9 @@ export default function Footer() {
               <ul className="space-y-1 sm:space-y-2.5">
                 <li><Link to="/boutique" className="inline-block py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:py-0">Tous les produits</Link></li>
                 {categories.map((cat) => (
-                  <li key={cat.name}>
+                  <li key={categoryLabel(cat.name)}>
                     <Link to={`/category/${slugify(cat.name)}`} className="inline-block py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:py-0">
-                      {cat.name}
+                      {categoryLabel(cat.name)}
                     </Link>
                   </li>
                 ))}

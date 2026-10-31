@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from './ProductCard';
@@ -49,11 +50,11 @@ export default function ProductGrid({
           <div className="mt-6 flex max-w-xl flex-wrap justify-center gap-2">
             {suggestedCategories.slice(0, 6).map((category) => (
               <Link
-                key={category.name}
+                key={categoryLabel(category.name)}
                 to={`/category/${slugify(category.name)}`}
                 className="rounded-full border border-border bg-background px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-foreground"
               >
-                {category.name}
+                {categoryLabel(category.name)}
               </Link>
             ))}
           </div>

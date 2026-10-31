@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -20,7 +21,7 @@ const NAV = [
   { to: '/track-order', label: 'Suivi', match: (path) => path === '/track-order' },
 ];
 
-export default function Header({ products = [], onWishlistOpen }) {
+export default function Header({ products = [], onWishlistOpen, promotionVisible = false }) {
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
   const { data: categories = [] } = useCategories();
@@ -69,7 +70,7 @@ export default function Header({ products = [], onWishlistOpen }) {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5">
+      <header className={`fixed inset-x-0 z-50 px-3 pt-3 sm:px-5 ${promotionVisible ? 'top-11' : 'top-0'}`}>
         <div
           className={`liquid-glass mx-auto flex h-14 max-w-[1200px] items-center justify-between gap-3 rounded-full pl-4 pr-2 transition-all duration-300 ${
             scrolled ? 'sm:max-w-[1000px]' : ''
@@ -193,7 +194,7 @@ export default function Header({ products = [], onWishlistOpen }) {
                     return (
                       <Link key={name} to={`/category/${slugify(name)}`} className="flex flex-col items-center gap-2 rounded-2xl bg-secondary px-2 py-4 text-center text-xs font-medium text-foreground">
                         {Icon && <Icon className="h-5 w-5 text-primary" />}
-                        <span className="w-full truncate">{name}</span>
+                        <span className="w-full truncate">{categoryLabel(name)}</span>
                       </Link>
                     );
                   })}

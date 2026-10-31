@@ -63,8 +63,6 @@ export default function Home() {
         </div>
       )}
 
-      <ExperienceBento products={activeProducts} />
-
       <CategoryShowcase products={activeProducts} />
 
       <FeaturedSection
@@ -110,6 +108,8 @@ export default function Home() {
           viewAllTo="/boutique?sale=1"
         />
       )}
+
+      <ExperienceBento products={activeProducts} />
 
       <HowItWorks />
 

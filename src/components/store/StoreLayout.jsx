@@ -12,6 +12,10 @@ import WishlistSidebar from '@/components/store/WishlistSidebar';
 import WhatsAppFloat from '@/components/store/WhatsAppFloat';
 import ComparePanel from '@/components/store/ComparePanel';
 import CartIsland from '@/components/store/CartIsland';
+import PromotionStrip from '@/components/store/PromotionStrip';
+import { storagePrefix } from '@/lib/brand';
+
+const PROMO_DISMISSED_KEY = `${storagePrefix}_promotion_dismissed_v1`;
 
 export function useStoreProducts() {
   const query = useQuery({
@@ -30,10 +34,25 @@ export default function StoreLayout({ children, hideTabBar = false, hideWhatsApp
   const { wishlist, removeFromWishlist } = useWishlist();
   const { pathname } = useLocation();
   const reduce = useReducedMotion();
+  const [promoDismissed, setPromoDismissed] = useState(() => {
+    try { return sessionStorage.getItem(PROMO_DISMISSED_KEY) === '1'; } catch { return false; }
+  });
+  const maxDiscount = activeProducts.reduce((max, product) => {
+    const original = Number(product.original_price);
+    const price = Number(product.price);
+    if (product.status === 'out_of_stock' || !Number.isFinite(original) || !Number.isFinite(price) || original <= 0 || price < 0 || price >= original) return max;
+    return Math.max(max, Math.floor(((original - price) / original) * 100));
+  }, 0);
+  const showPromotion = !promoDismissed && maxDiscount > 0;
+  const dismissPromotion = () => {
+    setPromoDismissed(true);
+    try { sessionStorage.setItem(PROMO_DISMISSED_KEY, '1'); } catch { /* Dismiss for this visit when storage is unavailable. */ }
+  };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header products={activeProducts} onWishlistOpen={() => setWishlistOpen(true)} />
+    <div className={`flex min-h-screen flex-col bg-background ${showPromotion ? 'pt-11' : ''}`}>
+      {showPromotion && <PromotionStrip discount={maxDiscount} onDismiss={dismissPromotion} />}
+      <Header promotionVisible={showPromotion} products={activeProducts} onWishlistOpen={() => setWishlistOpen(true)} />
       <motion.main
         key={pathname}
         // Opacity only: a transform here would break position:fixed bars inside pages

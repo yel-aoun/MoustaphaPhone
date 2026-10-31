@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { storagePrefix } from '@/lib/brand';
 
 const RECENT_KEY = `${storagePrefix}_recent_searches`;
@@ -14,7 +15,7 @@ export function normalizeText(value) {
 export function productMatchesQuery(product, query) {
   const q = normalizeText(query);
   if (!q) return true;
-  const haystack = normalizeText(`${product.name} ${product.category} ${product.description}`);
+  const haystack = normalizeText(`${product.name} ${product.category} ${categoryLabel(product.category)} ${product.description}`);
   return q.split(/\s+/).every((word) => haystack.includes(word));
 }
 

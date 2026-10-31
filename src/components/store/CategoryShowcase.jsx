@@ -1,74 +1,93 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Package } from 'lucide-react';
+import { useInView, useReducedMotion } from 'framer-motion';
+import { ChevronRight, Package, Pause, Play } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { ICON_COMPONENTS } from '@/lib/categoryIcons';
-import Reveal from '@/components/store/fx/Reveal';
+import { categoryLabel } from '@/lib/productCategories';
 import { cloudinaryImage } from '@/lib/images';
 import { slugify } from '@/lib/products';
 
-export default function CategoryShowcase({ products = [] }) {
-  const { data: categories = [] } = useCategories();
+function CategoryTile({ name, icon, count, covers }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { amount: 0.25 });
+  const reduce = useReducedMotion();
+  const [index, setIndex] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [visible, setVisible] = useState(() => !document.hidden);
+  const Icon = ICON_COMPONENTS[icon] || Package;
+  const signature = covers.map((p) => p.image_url).join('|');
 
-  const tiles = useMemo(() => {
-    return categories
-      .map((category) => {
-        const inCategory = products.filter((p) => p.category === category.name);
-        const cover = inCategory.find((p) => p.image_url && p.status !== 'out_of_stock') || inCategory.find((p) => p.image_url);
-        return { ...category, count: inCategory.length, cover };
-      })
-      .filter((tile) => tile.count > 0)
-      .slice(0, 8);
-  }, [categories, products]);
-
-  if (tiles.length === 0) return null;
+  useEffect(() => { setIndex(0); }, [signature]);
+  useEffect(() => {
+    const update = () => setVisible(!document.hidden);
+    document.addEventListener('visibilitychange', update);
+    return () => document.removeEventListener('visibilitychange', update);
+  }, []);
+  useEffect(() => {
+    if (reduce || !inView || !visible || hovered || focused || paused || covers.length < 2) return;
+    const timer = setInterval(() => setIndex((current) => (current + 1) % covers.length), 5500);
+    return () => clearInterval(timer);
+  }, [reduce, inView, visible, hovered, focused, paused, covers.length]);
 
   return (
-    <section className="container-store py-14 sm:py-20">
+    <div ref={ref} className="relative min-w-0" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
+      <Link to={`/category/${slugify(name)}`}
+        className="photo-well group flex h-[250px] flex-col overflow-hidden rounded-2xl p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:h-[290px] sm:p-5">
+        <span className="mb-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background/80 text-primary">
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="text-base font-semibold leading-tight sm:text-lg">{categoryLabel(name)}</span>
+        <span className="mt-1 text-xs text-muted-foreground dark:text-slate-600">{count} produit{count > 1 ? 's' : ''}</span>
+        <div className="relative mt-3 min-h-0 flex-1" aria-hidden="true">
+          {covers.length ? covers.map((cover, i) => (
+            <img key={cover.image_url}
+              src={cloudinaryImage(cover.image_url, { width: 400, height: 400, crop: 'pad', transform: true })}
+              alt="" loading="lazy" decoding="async"
+              className={`absolute inset-0 h-full w-full object-contain p-2 transition-opacity duration-700 motion-reduce:transition-none ${i === index % covers.length ? 'opacity-100' : 'opacity-0'}`} />
+          )) : <Package className="absolute bottom-2 right-2 h-12 w-12 text-muted-foreground" />}
+        </div>
+      </Link>
+      {covers.length > 1 && !reduce && (
+        <button type="button" onClick={() => setPaused((value) => !value)}
+          aria-label={`${paused ? 'Reprendre' : 'Suspendre'} le défilement des images : ${categoryLabel(name)}`} aria-pressed={paused}
+          className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:bg-background dark:text-slate-600 dark:hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+          {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default function CategoryShowcase({ products = [] }) {
+  const { data: categories = [] } = useCategories();
+  const tiles = useMemo(() => categories.map((category) => {
+    const inCategory = products.filter((p) => p.category === category.name);
+    const available = inCategory.filter((p) => p.image_url && p.status !== 'out_of_stock');
+    const candidates = available.length ? available : inCategory.filter((p) => p.image_url);
+    const seen = new Set();
+    const covers = candidates.filter((p) => {
+      if (seen.has(p.image_url)) return false;
+      seen.add(p.image_url);
+      return true;
+    }).slice(0, 4);
+    return { ...category, count: inCategory.length, covers };
+  }).filter((tile) => tile.count > 0).slice(0, 8), [categories, products]);
+
+  if (!tiles.length) return null;
+  return (
+    <section className="container-store pb-10 pt-8 sm:pb-12 sm:pt-10">
       <div className="mb-6 flex items-end justify-between gap-4">
         <h2 className="section-title">Explorer par catégorie</h2>
-        <Link to="/boutique" className="hidden items-center text-sm font-medium text-primary hover:underline sm:flex">
+        <Link to="/boutique" className="hidden min-h-11 items-center text-sm font-medium text-primary hover:underline sm:flex">
           Tout voir <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
-        {tiles.map(({ name, icon, count, cover }, i) => {
-          const Icon = icon ? ICON_COMPONENTS[icon] : null;
-          return (
-            <Reveal key={name} delay={i * 0.05}>
-              <Link
-                to={`/category/${slugify(name)}`}
-                className="photo-well group relative flex aspect-square flex-col overflow-hidden rounded-2xl p-4 sm:aspect-[4/3.4] sm:p-5"
-              >
-                {/* Scan line + corner trace on hover */}
-                <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-transparent via-primary/15 to-transparent opacity-0 group-hover:animate-scan group-hover:opacity-100" />
-                <svg className="pointer-events-none absolute right-3 top-3 h-10 w-10 text-primary opacity-30 transition-opacity group-hover:opacity-80" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                  <path d="M2 2 H22 L30 10 V38" />
-                  <circle cx="30" cy="38" r="2" fill="currentColor" />
-                  <circle cx="2" cy="2" r="2" fill="currentColor" />
-                </svg>
-                {Icon && (
-                  <span className="relative z-10 mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-background/70 text-primary shadow-sm">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                )}
-                <span className="relative z-10 text-base font-semibold sm:text-lg">{name}</span>
-                <span className="relative z-10 text-xs opacity-60">{count} produit{count > 1 ? 's' : ''}</span>
-                {cover ? (
-                  <img
-                    src={cloudinaryImage(cover.image_url, { width: 400, height: 400, crop: 'pad' })}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute -bottom-2 -right-2 h-[62%] w-[62%] bg-transparent object-contain p-2 mix-blend-multiply transition-transform duration-500 group-hover:-translate-y-2 group-hover:scale-110 group-hover:-rotate-6"
-                  />
-                ) : (
-                  <Package className="absolute bottom-5 right-5 h-10 w-10 opacity-20" />
-                )}
-              </Link>
-            </Reveal>
-          );
-        })}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+        {tiles.map((tile) => <CategoryTile key={tile.name} {...tile} />)}
       </div>
     </section>
   );

@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -222,7 +223,7 @@ export default function ProductDetail() {
           {product?.category && (
             <>
               <span>/</span>
-              <Link to={`/category/${slugify(product.category)}`} className="hover:text-foreground">{product.category}</Link>
+              <Link to={`/category/${slugify(product.category)}`} className="hover:text-foreground">{categoryLabel(product.category)}</Link>
             </>
           )}
         </nav>
@@ -502,7 +503,7 @@ export default function ProductDetail() {
                 <div className="mb-6 flex items-baseline justify-between gap-3">
                   <div>
                     <h2 className="section-title">Vous aimerez aussi</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">{product.category}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{categoryLabel(product.category)}</p>
                   </div>
                   <Link
                     to={product.category ? `/category/${slugify(product.category)}` : '/'}

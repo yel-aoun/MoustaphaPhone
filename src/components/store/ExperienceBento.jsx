@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -74,7 +75,7 @@ function ProductFinder({ products }) {
       title: 'Vous cherchez…',
       body: (
         <div className="grid grid-cols-2 gap-2">
-          {[{ name: null, label: 'Un peu de tout' }, ...categories.map((c) => ({ name: c.name, label: c.name, icon: c.icon }))].map(({ name, label, icon }) => {
+          {[{ name: null, label: 'Un peu de tout' }, ...categories.map((c) => ({ name: c.name, label: categoryLabel(c.name), icon: c.icon }))].map(({ name, label, icon }) => {
             const Icon = icon ? ICON_COMPONENTS[icon] : Sparkles;
             return (
               <button key={label} type="button" onClick={() => { setCategory(name); setStep(1); }} className={choice(category === name && step > 0)}>
@@ -148,7 +149,7 @@ function ProductFinder({ products }) {
                   <CountUp to={matches.length} duration={0.9} />
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  produit{matches.length !== 1 ? 's' : ''} pour vous{category ? ` en ${category}` : ''}{brand ? ` · ${brand.name}` : ''}.
+                  produit{matches.length !== 1 ? 's' : ''} pour vous{category ? ` en ${categoryLabel(category)}` : ''}{brand ? ` · ${brand.name}` : ''}.
                 </p>
                 <button
                   type="button"
@@ -183,7 +184,7 @@ function ProductFinder({ products }) {
 
 export default function ExperienceBento({ products = [] }) {
   return (
-    <section className="container-store py-14 sm:py-20">
+    <section className="container-store pb-6 pt-10 sm:pb-8 sm:pt-12">
       <Reveal>
         <h2 className="section-title">L’expérience {storeBrand.name}</h2>
         <p className="mt-1 text-sm text-muted-foreground">Trouvez le bon produit, commandez en un message, payez à la porte.</p>

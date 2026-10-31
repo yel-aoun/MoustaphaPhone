@@ -312,6 +312,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     const submitAction = e.nativeEvent?.submitter?.value || 'return';
     setLoading(true);
 
@@ -348,18 +349,19 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
       let savedProduct;
       if (isEditing) {
         savedProduct = await base44.entities.Product.update(product.id, payload);
-        toast.success('Produit mis à jour avec succès');
       } else {
         savedProduct = await base44.entities.Product.create(payload);
-        toast.success('Produit ajouté avec succès');
       }
 
       queryClient.setQueryData(['admin-products'], (current = []) => upsertProductInCache(current, savedProduct));
       queryClient.setQueryData(['products'], (current = []) => upsertProductInCache(current, savedProduct));
-      await Promise.all([
+      // The write has completed and both caches contain the saved product.
+      // A slow catalogue refresh must never block returning to the list.
+      void Promise.allSettled([
         queryClient.invalidateQueries({ queryKey: ['admin-products'] }),
         queryClient.invalidateQueries({ queryKey: ['products'] }),
       ]);
+      toast.success(isEditing ? 'Produit mis à jour avec succès' : 'Produit ajouté avec succès');
       clearDraft(draftKey);
       setDraftRestored(false);
       if (submitAction === 'stay') {
@@ -846,7 +848,7 @@ export default function AdminProductForm({ product, onSaved, onCancel, onStayEdi
           className="h-11 rounded-xl border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.06] hover:text-white"
         >
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-          Sauvegarder et continuer
+          Enregistrer et rester ici
         </Button>
         <Button
           type="submit"

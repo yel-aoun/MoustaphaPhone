@@ -1,3 +1,4 @@
+import { categoryLabel } from '@/lib/productCategories';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -60,7 +61,7 @@ export default function SpotlightSearch({ open, onClose, products = [] }) {
       ];
     }
     const matchedProducts = products.filter((p) => productMatchesQuery(p, clean)).slice(0, 6);
-    const matchedCategories = categories.filter((c) => normalizeText(c.name).includes(normalizeText(clean))).slice(0, 3);
+    const matchedCategories = categories.filter((c) => normalizeText(`${c.name} ${categoryLabel(c.name)}`).includes(normalizeText(clean))).slice(0, 3);
     return [
       ...matchedProducts.map((product) => ({ type: 'product', key: `p-${product.id}`, product, run: () => go(getProductPath(product), clean) })),
       ...matchedCategories.map((category) => ({ type: 'category', key: `c-${category.name}`, category, run: () => go(`/category/${slugify(category.name)}`, clean) })),
@@ -170,7 +171,7 @@ export default function SpotlightSearch({ open, onClose, products = [] }) {
                               className="inline-flex items-center gap-1.5 rounded-full border border-foreground/10 bg-background/60 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-primary hover:text-primary"
                             >
                               {Icon && <Icon className="h-3.5 w-3.5" />}
-                              {name}
+                              {categoryLabel(name)}
                             </button>
                           );
                         })}
@@ -212,7 +213,7 @@ export default function SpotlightSearch({ open, onClose, products = [] }) {
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-medium text-foreground"><Highlight text={product.name} query={clean} /></span>
                             <span className="text-xs text-muted-foreground">
-                              {product.category} · {product.status === 'out_of_stock' ? 'Épuisé' : 'En stock'}
+                              {categoryLabel(product.category)} · {product.status === 'out_of_stock' ? 'Épuisé' : 'En stock'}
                             </span>
                           </span>
                           <span className="shrink-0 text-sm font-semibold text-foreground">{formatMoney(product.price)}</span>
@@ -224,7 +225,7 @@ export default function SpotlightSearch({ open, onClose, products = [] }) {
                       return (
                         <button key={item.key} id={item.key} type="button" data-index={i} onMouseEnter={() => setActive(i)} onClick={item.run} className={rowClass(i)}>
                           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span>
-                          <span className="flex-1 text-sm text-foreground">Catégorie <span className="font-medium">{item.category.name}</span></span>
+                          <span className="flex-1 text-sm text-foreground">Catégorie <span className="font-medium">{categoryLabel(item.category.name)}</span></span>
                         </button>
                       );
                     }
