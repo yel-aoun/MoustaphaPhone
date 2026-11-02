@@ -1,6 +1,6 @@
 import { getProductOffer } from '@/lib/products';
 import { categoryLabel } from '@/lib/productCategories';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -28,6 +28,7 @@ import { base44 } from '@/api/base44Client';
 import StoreLayout from '@/components/store/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
 import DeliveryTimeline from '@/components/store/DeliveryTimeline';
+import SwipeGallery from '@/components/store/SwipeGallery';
 import { showCartIsland } from '@/components/store/CartIsland';
 import RecentlyViewedSection from '@/components/store/RecentlyViewedSection';
 import { useCart } from '@/lib/cartStore';
@@ -35,7 +36,7 @@ import { useWishlist } from '@/lib/wishlistStore';
 import { useCompare } from '@/lib/compareStore';
 import { addRecentlyViewed } from '@/lib/recentStore';
 import { buildWhatsAppURL } from '@/lib/cartStore';
-import { cloudinaryImage, productImageSrcSet } from '@/lib/images';
+import { cloudinaryImage } from '@/lib/images';
 import { formatMoney, getProductUrl, productMatchesSlug, slugify } from '@/lib/products';
 import { storeBrand } from '@/lib/brand';
 import { getColorForImage, getColorImageIndex, getProductImages } from '@/lib/productOptions';
@@ -56,7 +57,6 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const touchStart = useRef({ x: 0, y: 0 });
 
   const { addToCart } = useCart();
   const { wishlist, toggleWishlist } = useWishlist();
@@ -184,21 +184,6 @@ export default function ProductDetail() {
   const prevImage = () => selectImage((activeImage - 1 + images.length) % images.length);
   const nextImage = () => selectImage((activeImage + 1) % images.length);
 
-  const handleTouchStart = (event) => {
-    const touch = event.touches[0];
-    touchStart.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleTouchEnd = (event) => {
-    if (images.length < 2) return;
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - touchStart.current.x;
-    const dy = touch.clientY - touchStart.current.y;
-    if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy)) return;
-    if (dx > 0) prevImage();
-    else nextImage();
-  };
-
   const handleCopyLink = async () => {
     if (!product) return;
     try {
@@ -276,23 +261,16 @@ export default function ProductDetail() {
           <>
             <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.78fr)]">
               <div className="min-w-0 lg:flex lg:flex-row-reverse lg:items-start lg:gap-3">
-                <div
-                  className="photo-well relative aspect-square flex-1 overflow-hidden rounded-3xl lg:aspect-[4/3.6]"
-                  onTouchStart={handleTouchStart}
-                  onTouchEnd={handleTouchEnd}
-                >
+                <div className="photo-well relative aspect-square flex-1 overflow-hidden rounded-3xl lg:aspect-[4/3.6]">
                   <span key={activeSrc} className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-1/3 animate-scan bg-gradient-to-b from-transparent via-primary/15 to-transparent [animation-iteration-count:1]" />
                   {activeSrc ? (
-                    <img
-                      src={cloudinaryImage(activeSrc, { width: 900 })}
-                      srcSet={productImageSrcSet(activeSrc, [480, 720, 960])}
-                      sizes="(min-width: 1024px) 54vw, 100vw"
+                    <SwipeGallery
+                      images={images}
+                      activeIndex={activeImage}
+                      onChange={selectImage}
+                      onOpen={() => setLightboxOpen(true)}
                       alt={product.name}
-                      loading="eager"
-                      decoding="async"
-                      fetchPriority="high"
-                      onClick={() => setLightboxOpen(true)}
-                      className={`relative h-full w-full cursor-zoom-in bg-transparent object-contain p-8 mix-blend-multiply ${isOutOfStock ? 'opacity-60' : ''}`}
+                      dimmed={isOutOfStock}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-secondary text-muted-foreground">

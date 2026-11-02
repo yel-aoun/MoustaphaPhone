@@ -6,6 +6,9 @@
 
 html {
   font-size: 100%;
+  /* No double-tap-zoom wait on taps; press states give the feedback instead */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   scrollbar-gutter: stable;
   scroll-padding-top: 8rem;
 }
@@ -99,8 +102,13 @@ html {
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1, h2, h3 {
+  /* Tracking follows size: tight for display headings, almost neutral for small ones */
+  h1, h2 {
     @apply tracking-tight;
+    text-wrap: balance;
+  }
+  h3 {
+    letter-spacing: -0.01em;
     text-wrap: balance;
   }
 
@@ -251,6 +259,29 @@ html {
 @media (hover: none), (max-width: 767px) {
   .animate-trace { display: none; }
   .animate-aurora { animation: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass,
+  .dark .liquid-glass {
+    background: hsl(var(--background));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .liquid-glass,
+  .dark .liquid-glass {
+    background: hsl(var(--background));
+    border-color: hsl(var(--foreground) / 0.6);
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 280ms;
+  animation-timing-function: ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
+import { MotionConfig } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -92,9 +93,12 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
+        {/* Springs and slides become fades when the visitor asks for reduced motion */}
+        <MotionConfig reducedMotion="user">
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+        </MotionConfig>
         <Toaster position="bottom-center" />
       </QueryClientProvider>
     </AuthProvider>

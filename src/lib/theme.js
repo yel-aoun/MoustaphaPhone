@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { storagePrefix } from '@/lib/brand';
 
 const THEME_KEY = `${storagePrefix}_theme`;
@@ -20,7 +21,12 @@ export function useTheme() {
     localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  const toggleTheme = () => setIsDark((v) => !v);
+  // Cross-fade between themes instead of flashing the whole screen bright or dark
+  const toggleTheme = () => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!document.startViewTransition || reduce) { setIsDark((v) => !v); return; }
+    document.startViewTransition(() => flushSync(() => setIsDark((v) => !v)));
+  };
 
   return { isDark, toggleTheme };
 }

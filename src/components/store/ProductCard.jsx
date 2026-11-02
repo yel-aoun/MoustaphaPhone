@@ -72,7 +72,7 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
     // otherwise it escapes their clipping and widens the whole page on phones
     <Link to={path} className="group relative flex h-full flex-col" aria-label={product.name}>
       <TiltCard className="rounded-2xl" max={6} glare={false}>
-      <div className="photo-well spotlight relative aspect-[4/5] overflow-hidden rounded-2xl" onPointerMove={trackSpotlight}>
+      <div className="photo-well spotlight relative aspect-[4/5] overflow-hidden rounded-2xl transition-transform duration-100 ease-out group-active:scale-[0.98]" onPointerMove={trackSpotlight}>
         {offer?.percent > 0 && !isOutOfStock && (
           <span className="absolute left-3 top-3 z-[2] rounded-lg bg-deal px-2.5 py-1.5 text-xs font-semibold tabular-nums text-deal-foreground">
             −{offer.percent} %
@@ -146,11 +146,12 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
             <AnimatePresence>
               {pickerOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 6, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 6, scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="liquid-glass absolute bottom-12 right-0 z-20 w-max max-w-[220px] rounded-2xl p-2"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                  // Grows out of the + button that opened it
+                  className="liquid-glass absolute bottom-12 right-0 z-20 origin-bottom-right w-max max-w-[220px] rounded-2xl p-2"
                   onClick={(event) => { event.preventDefault(); event.stopPropagation(); }}
                 >
                   <p className="px-1 pb-1.5 text-[11px] font-medium text-muted-foreground">Choisir la couleur</p>

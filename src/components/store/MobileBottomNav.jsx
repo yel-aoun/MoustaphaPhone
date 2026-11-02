@@ -44,7 +44,7 @@ export default function MobileBottomNav({ onWishlistOpen }) {
               <span className="relative text-[10px] font-medium">{label}</span>
             </>
           );
-          const className = `relative flex flex-col items-center gap-0.5 rounded-[20px] py-1.5 transition-colors ${
+          const className = `relative flex min-h-11 flex-col items-center gap-0.5 rounded-[20px] py-1.5 transition-[color,transform] duration-100 ease-out active:scale-95 ${
             active ? 'text-background' : 'text-muted-foreground'
           }`;
           return to ? (

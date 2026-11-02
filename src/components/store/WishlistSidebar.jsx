@@ -1,6 +1,7 @@
 import { X, Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SPRING_SETTLE, projectMomentum } from '@/lib/motion';
 import { cloudinaryImage } from '@/lib/images';
 
 export default function WishlistSidebar({ isOpen, onClose, wishlist, onRemove, onAddToCart }) {
@@ -23,12 +24,24 @@ export default function WishlistSidebar({ isOpen, onClose, wishlist, onRemove, o
           />
 
           {/* Panel */}
+          {/* Swipe right to dismiss: it leaves the way it came in */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mes favoris"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-border bg-background"
+            transition={SPRING_SETTLE}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={{ left: 0.04, right: 1 }}
+            dragMomentum={false}
+            onDragEnd={(event, info) => {
+              const width = event.currentTarget?.offsetWidth || window.innerWidth;
+              if (info.offset.x + projectMomentum(info.velocity.x) > width / 2) onClose();
+            }}
+            className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md touch-pan-y flex-col border-l border-border bg-background"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 h-16 border-b border-border shrink-0">
@@ -37,7 +50,7 @@ export default function WishlistSidebar({ isOpen, onClose, wishlist, onRemove, o
                 <h2 className="font-semibold text-lg">Mes Favoris</h2>
                 <span className="text-sm text-muted-foreground">({wishlist.length})</span>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose}>
+              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fermer les favoris" className="h-11 w-11">
                 <X className="w-5 h-5" />
               </Button>
             </div>
@@ -88,7 +101,8 @@ export default function WishlistSidebar({ isOpen, onClose, wishlist, onRemove, o
                             </button>
                             <button
                               onClick={() => onRemove(item.id)}
-                              className="ml-auto w-7 h-7 rounded-md flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors"
+                              aria-label={`Retirer ${item.name} des favoris`}
+                              className="-my-2 -mr-2 ml-auto w-11 h-11 rounded-full flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
