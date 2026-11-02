@@ -358,7 +358,7 @@ export default function Cart() {
           )}
 
           {/* Summary */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+          <aside className="lg:sticky lg:top-[calc(var(--store-header-offset,68px)+1.5rem)] lg:self-start lg:transition-[top] lg:duration-200">
             <div className="space-y-4 rounded-3xl bg-secondary p-6">
               <h2 className="text-lg font-semibold text-foreground">Récapitulatif</h2>
               {isForm && (

@@ -173,7 +173,7 @@ export default function Shop() {
 
       <div className="container-store pb-16 pt-6">
         {/* Toolbar */}
-        <div className="sticky top-[76px] z-30 py-2">
+        <div className="sticky top-[var(--store-header-offset,68px)] z-30 py-2 transition-[top] duration-200 motion-reduce:transition-none">
           <div className="liquid-glass flex flex-col gap-2 rounded-[26px] p-2 lg:flex-row lg:items-center">
             <div className="relative lg:w-80">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

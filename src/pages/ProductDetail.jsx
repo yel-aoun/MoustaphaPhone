@@ -374,7 +374,7 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+              <div className="space-y-5 lg:sticky lg:top-[calc(var(--store-header-offset,68px)+1.5rem)] lg:self-start lg:transition-[top] lg:duration-200">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     {isOutOfStock ? (

@@ -80,6 +80,16 @@ export default function Header({ products = [], onWishlistOpen, promotionVisible
     return () => window.removeEventListener('keydown', onKey);
   }, [menuOpen]);
 
+  // Publish where the header's bottom edge currently is (offer strip + floating bar,
+  // or just the strip while the bar is tucked away) so sticky page toolbars sit
+  // right under it instead of a fixed guess that overlaps or leaves a gap.
+  const headerShown = !(hidden && !menuOpen && !searchOpen);
+  useEffect(() => {
+    const offset = (promotionVisible ? 44 : 0) + (headerShown ? 68 : 0);
+    document.documentElement.style.setProperty('--store-header-offset', `${offset}px`);
+  }, [headerShown, promotionVisible]);
+  useEffect(() => () => document.documentElement.style.removeProperty('--store-header-offset'), []);
+
   // Close overlays whenever the route changes
   useEffect(() => {
     setSearchOpen(false);
@@ -92,7 +102,7 @@ export default function Header({ products = [], onWishlistOpen, promotionVisible
   return (
     <>
       <header ref={headerRef} onFocusCapture={() => setHidden(false)}
-        className={`fixed inset-x-0 z-50 px-3 pt-3 transition-transform duration-200 motion-reduce:transition-none sm:px-5 ${promotionVisible ? 'top-11' : 'top-0'} ${hidden && !menuOpen && !searchOpen ? '-translate-y-[calc(100%+3rem)]' : 'translate-y-0'}`}>
+        className={`fixed inset-x-0 z-50 px-3 pt-3 transition-transform duration-200 motion-reduce:transition-none sm:px-5 ${promotionVisible ? 'top-11' : 'top-0'} ${headerShown ? 'translate-y-0' : '-translate-y-[calc(100%+3rem)]'}`}>
         <div
           className={`liquid-glass mx-auto flex h-14 max-w-[1200px] items-center justify-between gap-3 rounded-full pl-4 pr-2 transition-all duration-300 ${
             scrolled ? 'sm:max-w-[1000px]' : ''
