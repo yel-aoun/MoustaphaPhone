@@ -189,6 +189,18 @@ html {
     display: none;
   }
 
+  /* Horizontal product row on phones. overflow-x alone makes the row scroll
+     vertically too (entrance and tilt transforms poke out), so lock the y axis;
+     cards snap to the gutter and a sliver of the next card shows it swipes. */
+  .product-rail {
+    @apply no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden scroll-px-4 px-4 pb-1;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .product-rail > * {
+    @apply w-[42vw] max-w-[200px] shrink-0 snap-start;
+  }
+
   /* No pull-to-refresh in the admin: a stray downward swipe while filling a form reloaded the page */
   html.admin-open,
   html.admin-open body {

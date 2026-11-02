@@ -19,13 +19,14 @@ export default function FeaturedSection({ title, subtitle, products, onAddToCart
           </Link>
         )}
       </Reveal>
-      <div className="no-scrollbar -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+      {/* One reveal for the whole row: per-card reveals left the peeking card invisible on phones */}
+      <Reveal className="product-rail sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
         {products.slice(0, 8).map((product, index) => (
-          <Reveal key={product.id} delay={Math.min(index, 4) * 0.06} className="w-[46vw] max-w-[220px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+          <div key={product.id} className="sm:w-auto sm:max-w-none">
             <ProductCard product={product} onAddToCart={onAddToCart} imagePriority={index < 2} />
-          </Reveal>
+          </div>
         ))}
-      </div>
+      </Reveal>
     </section>
   );
 }

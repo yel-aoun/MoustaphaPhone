@@ -535,9 +535,9 @@ export default function ProductDetail() {
                     Tout voir
                   </Link>
                 </div>
-                <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+                <div className="product-rail sm:mx-0 sm:gap-4 sm:px-0">
                   {related.map((item, index) => (
-                    <div key={item.id} className="w-[46vw] max-w-[220px] shrink-0 sm:w-[220px]">
+                    <div key={item.id} className="sm:w-[220px] sm:max-w-none">
                       <ProductCard
                         product={item}
                         onAddToCart={addToCart}

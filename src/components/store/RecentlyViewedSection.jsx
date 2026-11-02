@@ -32,9 +32,9 @@ export default function RecentlyViewedSection({
   return (
     <section className="pb-14 sm:pb-20">
       <h2 className="section-title mb-6">Consultés récemment</h2>
-      <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+      <div className="product-rail sm:mx-0 sm:gap-4 sm:px-0">
         {recentProducts.map((product) => (
-          <div key={product.id} className="w-[46vw] max-w-[220px] shrink-0 sm:w-[200px]">
+          <div key={product.id} className="sm:w-[200px] sm:max-w-none">
             <ProductCard product={product} onAddToCart={onAddToCart} />
           </div>
         ))}
