@@ -68,7 +68,9 @@ export default function ProductCard({ product, onAddToCart, imagePriority = fals
   };
 
   return (
-    <Link to={path} className="group flex h-full flex-col" aria-label={product.name}>
+    // relative: keeps the absolutely positioned sr-only text inside horizontal scrollers,
+    // otherwise it escapes their clipping and widens the whole page on phones
+    <Link to={path} className="group relative flex h-full flex-col" aria-label={product.name}>
       <TiltCard className="rounded-2xl" max={6} glare={false}>
       <div className="photo-well spotlight relative aspect-[4/5] overflow-hidden rounded-2xl" onPointerMove={trackSpotlight}>
         {offer?.percent > 0 && !isOutOfStock && (

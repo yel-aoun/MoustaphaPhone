@@ -73,6 +73,13 @@ export default function Header({ products = [], onWishlistOpen, promotionVisible
     };
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKey = (event) => { if (event.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
   // Close overlays whenever the route changes
   useEffect(() => {
     setSearchOpen(false);
@@ -150,7 +157,7 @@ export default function Header({ products = [], onWishlistOpen, promotionVisible
               <Heart className="h-[18px] w-[18px]" />
               {totalWishlist > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />}
             </button>
-            <Link to="/panier" className="relative flex h-11 items-center gap-2 rounded-full bg-foreground pl-3 pr-3.5 text-background transition-transform hover:scale-[1.03] active:scale-95" aria-label="Panier">
+            <Link to="/panier" className="relative flex h-11 items-center gap-2 rounded-full bg-foreground pl-3 pr-3.5 text-background transition-transform hover:scale-[1.03] active:scale-95" aria-label={`Panier, ${totalItems} article${totalItems > 1 ? 's' : ''}`}>
               <ShoppingBag className="h-4 w-4" />
               <motion.span
                 key={totalItems}
@@ -183,7 +190,7 @@ export default function Header({ products = [], onWishlistOpen, promotionVisible
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
-                className="-mr-2 flex h-10 w-10 items-center justify-center rounded-full"
+                className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full"
                 aria-label="Fermer le menu"
               >
                 <X className="h-5 w-5" />

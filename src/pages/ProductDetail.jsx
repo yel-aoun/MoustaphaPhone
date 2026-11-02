@@ -62,7 +62,7 @@ export default function ProductDetail() {
   const { wishlist, toggleWishlist } = useWishlist();
   const { compareIds, toggleCompare } = useCompare();
 
-  const { data: products = [], isLoading, error } = useQuery({
+  const { data: products = [], isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list(),
   });
@@ -125,7 +125,7 @@ export default function ProductDetail() {
   const isOutOfStock = product?.status === 'out_of_stock';
   const isWishlisted = product ? wishlist.some((item) => item.id === product.id) : false;
   const isCompared = product ? compareIds.includes(product.id) : false;
-  const offer = getProductOffer(product);
+  const offer = isOutOfStock ? null : getProductOffer(product);
   const discount = offer?.percent > 0 ? offer.percent : null;
 
   const handleAdd = () => {
@@ -253,15 +253,24 @@ export default function ProductDetail() {
             </div>
           </div>
         ) : error ? (
-          <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-6 text-destructive">
-            Impossible de charger le produit. Vérifiez `/api/products` ou `/api/health` sur le domaine Vercel.
+          <div role="alert" className="rounded-3xl bg-destructive/10 p-6 text-center sm:p-10">
+            <p className="font-semibold text-destructive">Impossible de charger ce produit.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Vérifiez votre connexion puis réessayez.</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="mt-5 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {isFetching ? 'Chargement…' : 'Réessayer'}
+            </button>
           </div>
         ) : !product ? (
           <div className="rounded-3xl bg-secondary p-12 text-center">
             <Package className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">Produit introuvable</h1>
-            <Link to="/boutique" className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground">Retour à la boutique</Link>
             <p className="mt-2 text-sm text-muted-foreground">Ce produit n'est plus disponible ou le lien a changé.</p>
+            <Link to="/boutique" className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground">Retour à la boutique</Link>
           </div>
         ) : (
           <>
@@ -295,7 +304,7 @@ export default function ProductDetail() {
                     <button
                       type="button"
                       onClick={() => setLightboxOpen(true)}
-                      className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
+                      className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
                       aria-label="Agrandir l'image"
                     >
                       <Maximize2 className="h-4 w-4" />
@@ -305,15 +314,17 @@ export default function ProductDetail() {
                   {images.length > 1 && (
                     <>
                       <button
+                        type="button"
                         onClick={prevImage}
-                        className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
+                        className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
                         aria-label="Image précédente"
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </button>
                       <button
+                        type="button"
                         onClick={nextImage}
-                        className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
+                        className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-sm backdrop-blur transition-colors hover:bg-white"
                         aria-label="Image suivante"
                       >
                         <ChevronRight className="h-5 w-5" />
@@ -345,7 +356,10 @@ export default function ProductDetail() {
                     {images.map((image, index) => (
                       <button
                         key={image}
+                        type="button"
                         onClick={() => selectImage(index)}
+                        aria-label={`Afficher l'image ${index + 1}`}
+                        aria-current={index === activeImage ? 'true' : undefined}
                         className={`photo-well h-20 w-20 shrink-0 overflow-hidden rounded-2xl transition lg:h-20 lg:w-20 ${
                           index === activeImage ? 'ring-2 ring-foreground' : 'opacity-60 hover:opacity-100'
                         }`}
@@ -374,7 +388,7 @@ export default function ProductDetail() {
                       <span className="text-xs font-semibold text-deal">−{discount}%</span>
                     )}
                     {badges.map((badge) => (
-                      <span key={badge} className="text-xs font-semibold text-deal">
+                      <span key={badge} className="text-xs font-semibold text-primary">
                         {BADGE_LABELS[badge] || badge}
                       </span>
                     ))}
@@ -382,34 +396,21 @@ export default function ProductDetail() {
 
                   <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-[2.5rem] sm:leading-tight">{product.name}</h1>
 
-                  <div className="flex flex-wrap items-baseline gap-3">
-                    <span className="text-2xl font-semibold text-foreground">{formatMoney(product.price)}</span>
-                    {product.original_price && product.original_price > product.price && (
-                      <span className="text-base text-muted-foreground line-through">{formatMoney(product.original_price)}</span>
+                  <div>
+                    <div className="flex flex-wrap items-baseline gap-3">
+                      <span className="text-2xl font-semibold tabular-nums text-foreground">{formatMoney(product.price)}</span>
+                      {offer && (
+                        <span className="text-base tabular-nums text-muted-foreground">
+                          <span className="sr-only">Ancien prix : </span>
+                          <span className="line-through">{formatMoney(product.original_price)}</span>
+                        </span>
+                      )}
+                    </div>
+                    {offer && (
+                      <p className="mt-1 text-sm font-medium tabular-nums text-primary">Économisez {formatMoney(offer.savings)}</p>
                     )}
                   </div>
                 </div>
-
-                {product.description && (
-                  <div className="border-t border-border pt-5">
-                    <h2 className="text-sm font-semibold text-foreground">Description</h2>
-                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-muted-foreground">{product.description}</p>
-                  </div>
-                )}
-
-                {specs.length > 0 && (
-                  <div className="border-t border-border pt-5">
-                    <h2 className="text-sm font-semibold text-foreground">Caractéristiques</h2>
-                    <dl className="mt-3 divide-y divide-border">
-                      {specs.map((spec) => (
-                        <div key={`${spec.name}-${spec.value}`} className="grid grid-cols-[42%_1fr] gap-3 py-2 text-sm">
-                          <dt className="font-medium text-muted-foreground">{spec.name}</dt>
-                          <dd className="font-semibold text-foreground">{spec.value}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
-                )}
 
                 {colors.length > 0 && (
                   <div className="space-y-2">
@@ -421,9 +422,11 @@ export default function ProductDetail() {
                         <button
                           key={color.name}
                           onClick={() => selectColor(color, colorIndex)}
+                          type="button"
                           title={color.name}
                           aria-label={`Choisir la couleur ${color.name}`}
-                          className={`h-9 w-9 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/30 transition ${
+                          aria-pressed={selectedColor?.name === color.name}
+                          className={`h-11 w-11 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/30 transition ${
                             selectedColor?.name === color.name
                               ? 'outline outline-2 outline-offset-2 outline-foreground'
                               : 'hover:scale-105'
@@ -439,11 +442,11 @@ export default function ProductDetail() {
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="text-sm font-semibold text-foreground">Quantité</span>
                     <div className="flex items-center gap-1 rounded-full border border-border p-1">
-                      <button onClick={() => setQty((value) => Math.max(1, value - 1))} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary">
+                      <button type="button" onClick={() => setQty((value) => Math.max(1, value - 1))} disabled={qty <= 1} aria-label="Diminuer la quantité" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary disabled:opacity-40 disabled:hover:bg-transparent">
                         <Minus className="h-4 w-4" />
                       </button>
-                      <span className="w-8 text-center font-medium">{qty}</span>
-                      <button onClick={() => setQty((value) => value + 1)} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary">
+                      <span className="w-8 text-center font-medium tabular-nums" aria-live="polite">{qty}</span>
+                      <button type="button" onClick={() => setQty((value) => value + 1)} aria-label="Augmenter la quantité" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary">
                         <Plus className="h-4 w-4" />
                       </button>
                     </div>
@@ -494,6 +497,27 @@ export default function ProductDetail() {
                 </div>
 
                 <DeliveryTimeline />
+
+                {product.description && (
+                  <div className="border-t border-border pt-5">
+                    <h2 className="text-sm font-semibold text-foreground">Description</h2>
+                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-muted-foreground">{product.description}</p>
+                  </div>
+                )}
+
+                {specs.length > 0 && (
+                  <div className="border-t border-border pt-5">
+                    <h2 className="text-sm font-semibold text-foreground">Caractéristiques</h2>
+                    <dl className="mt-3 divide-y divide-border">
+                      {specs.map((spec) => (
+                        <div key={`${spec.name}-${spec.value}`} className="grid grid-cols-[42%_1fr] gap-3 py-2 text-sm">
+                          <dt className="font-medium text-muted-foreground">{spec.name}</dt>
+                          <dd className="font-semibold text-foreground">{spec.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -586,7 +610,7 @@ export default function ProductDetail() {
                   <button
                     key={`lightbox-dot-${image}`}
                     type="button"
-                    onClick={() => setActiveImage(index)}
+                    onClick={() => selectImage(index)}
                     className="flex h-8 items-center px-1.5"
                     aria-label={`Afficher l'image ${index + 1}`}
                   >

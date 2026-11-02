@@ -184,10 +184,15 @@ export function useCart() {
     saveCart([]);
   }, []);
 
+  // Puts back a snapshot taken before a removal, for "Annuler" actions
+  const restoreCart = useCallback((items) => {
+    saveCart(Array.isArray(items) ? items : []);
+  }, []);
+
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  return { cart, addToCart, removeFromCart, updateQuantity, updateVariant, clearCart, totalItems, totalPrice };
+  return { cart, addToCart, removeFromCart, updateQuantity, updateVariant, clearCart, restoreCart, totalItems, totalPrice };
 }
 
 export function buildWhatsAppURL(cart, total, customer = {}) {

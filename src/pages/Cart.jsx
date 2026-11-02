@@ -11,6 +11,7 @@ import { formatMoney, getProductPath, toPublicUrl } from '@/lib/products';
 import { getImageForColor, getProductColors } from '@/lib/productOptions';
 import { useSeo } from '@/lib/seo';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import StoreLayout, { useStoreProducts } from '@/components/store/StoreLayout';
 import CircuitBackground from '@/components/store/fx/CircuitBackground';
 
@@ -28,7 +29,7 @@ function SummaryRow({ label, value, strong = false }) {
 
 export default function Cart() {
   const { products } = useStoreProducts();
-  const { cart, updateQuantity, updateVariant, removeFromCart, clearCart, totalPrice } = useCart();
+  const { cart, updateQuantity, updateVariant, removeFromCart, clearCart, restoreCart, totalPrice } = useCart();
   const [step, setStep] = useState('cart'); // 'cart' | 'form' | 'sending' | 'success'
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -45,6 +46,19 @@ export default function Cart() {
     item.original_price && item.original_price > item.price
       ? s + (item.original_price - item.price) * item.quantity
       : s, 0);
+
+  // Removals are instant, so offer a way back instead of a confirmation dialog
+  const withUndo = (message, action) => {
+    const snapshot = cart.map((item) => ({ ...item }));
+    action();
+    toast(message, { action: { label: 'Annuler', onClick: () => restoreCart(snapshot) } });
+  };
+  const removeItem = (item, itemKey) => withUndo(`${item.name} retiré du panier`, () => removeFromCart(itemKey));
+  const decreaseItem = (item, itemKey) => {
+    if (item.quantity > 1) updateQuantity(itemKey, -1);
+    else removeItem(item, itemKey);
+  };
+  const emptyCart = () => withUndo('Panier vidé', clearCart);
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
@@ -105,13 +119,15 @@ export default function Cart() {
     trackParams.set('phone', customer.phone);
     if (savedOrder?.id) trackParams.set('id', String(savedOrder.id).slice(0, 8));
     const trackPath = `/track-order?${trackParams.toString()}`;
-    window.open(buildWhatsAppURL(cart, totalPayable, {
+    const whatsappUrl = buildWhatsAppURL(cart, totalPayable, {
       ...customer,
       orderId: savedOrder?.id,
       trackingUrl: toPublicUrl(trackPath),
-    }), '_blank');
+    });
+    // Browsers may block this pop-up after the network wait; the success screen keeps a link
+    window.open(whatsappUrl, '_blank');
     clearCart();
-    setLastOrder({ id: savedOrder?.id || null, total: totalPayable, phone: customer.phone, trackingPath: trackPath });
+    setLastOrder({ id: savedOrder?.id || null, total: totalPayable, phone: customer.phone, trackingPath: trackPath, whatsappUrl });
     setStep('success');
   };
 
@@ -120,10 +136,24 @@ export default function Cart() {
       <StoreLayout>
         <div className="container-store flex max-w-xl flex-col items-center py-20 text-center">
           <CheckCircle className="h-14 w-14 text-primary" strokeWidth={1.5} />
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-foreground">Merci, commande enregistrée.</h1>
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-foreground">
+            {lastOrder.id ? 'Merci, commande enregistrée.' : 'Merci, plus qu’une étape.'}
+          </h1>
           <p className="mt-3 text-muted-foreground">
-            WhatsApp s'est ouvert pour confirmer votre commande. Gardez ce code pour la suivre.
+            {lastOrder.id
+              ? 'Envoyez le message WhatsApp pour confirmer votre commande. Gardez ce code pour la suivre.'
+              : 'Envoyez le message WhatsApp préparé pour que nous recevions votre commande.'}
           </p>
+          <a
+            href={lastOrder.whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#25D366] px-7 text-sm font-medium text-white"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Ouvrir WhatsApp
+          </a>
+          <p className="mt-2 text-xs text-muted-foreground">Si WhatsApp ne s’est pas ouvert tout seul.</p>
           <div className="mt-8 w-full space-y-3 rounded-2xl bg-secondary p-6 text-left">
             <SummaryRow label="Code commande" value={lastOrder.id ? String(lastOrder.id).slice(0, 8) : 'Enregistrée'} />
             <SummaryRow label="Téléphone" value={lastOrder.phone} />
@@ -250,7 +280,8 @@ export default function Cart() {
                               onClick={() => updateVariant?.(itemKey, color, catalogProduct)}
                               title={color.name}
                               aria-label={`Choisir ${color.name}`}
-                              className={`h-8 w-8 rounded-full ring-1 sm:h-6 sm:w-6 ring-inset ring-black/10 dark:ring-white/30 transition ${
+                              aria-pressed={getCartItemKey({ id: item.id, selectedColor: color.name, selectedColorHex: color.hex }) === itemKey}
+                              className={`h-11 w-11 rounded-full ring-1 sm:h-8 sm:w-8 ring-inset ring-black/10 dark:ring-white/30 transition ${
                                 getCartItemKey({ id: item.id, selectedColor: color.name, selectedColorHex: color.hex }) === itemKey
                                   ? 'outline outline-2 outline-offset-2 outline-foreground'
                                   : ''
@@ -263,15 +294,15 @@ export default function Cart() {
 
                       <div className="mt-auto flex items-center justify-between gap-3 pt-4">
                         <div className="flex items-center rounded-full border border-border">
-                          <button onClick={() => updateQuantity(itemKey, -1)} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary" aria-label="Diminuer la quantité">
+                          <button type="button" onClick={() => decreaseItem(item, itemKey)} className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary" aria-label={item.quantity > 1 ? 'Diminuer la quantité' : `Retirer ${item.name}`}>
                             <Minus className="h-3.5 w-3.5" />
                           </button>
-                          <span className="w-7 text-center text-sm font-medium">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(itemKey, 1)} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary" aria-label="Augmenter la quantité">
+                          <span className="w-7 text-center text-sm font-medium tabular-nums" aria-live="polite">{item.quantity}</span>
+                          <button type="button" onClick={() => updateQuantity(itemKey, 1)} className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary" aria-label="Augmenter la quantité">
                             <Plus className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                        <button onClick={() => removeFromCart(itemKey)} className="-mr-2 min-h-10 px-2 text-sm font-medium text-primary hover:underline">
+                        <button type="button" onClick={() => removeItem(item, itemKey)} className="-mr-2 min-h-11 px-2 text-sm font-medium text-primary hover:underline">
                           Retirer
                         </button>
                       </div>
@@ -287,25 +318,26 @@ export default function Cart() {
                 Vos données servent uniquement à livrer votre commande.
               </p>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Nom complet</label>
-                <Input value={name} onChange={(e) => { setName(e.target.value); setFormError(''); }} placeholder="Ex : Ahmed Benali" className="h-12 rounded-xl" required autoFocus />
+                <label htmlFor="checkout-name" className="text-sm font-medium text-foreground">Nom complet</label>
+                <Input id="checkout-name" name="name" autoComplete="name" value={name} onChange={(e) => { setName(e.target.value); setFormError(''); }} placeholder="Ex : Ahmed Benali" className="h-12 rounded-xl" required autoFocus />
               </div>
               <div className="space-y-2">
-                <label className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <label htmlFor="checkout-phone" className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                   <Lock className="h-3.5 w-3.5 text-muted-foreground" /> Téléphone
                 </label>
-                <Input value={phone} onChange={(e) => { setPhone(e.target.value); setFormError(''); }} placeholder="Ex : 06 12 34 56 78" type="tel" className="h-12 rounded-xl" required />
+                <Input id="checkout-phone" name="tel" autoComplete="tel" inputMode="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setFormError(''); }} placeholder="Ex : 06 12 34 56 78" type="tel" className="h-12 rounded-xl" required />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Ville de livraison</label>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex : Casablanca" className="h-12 rounded-xl" />
+                <label htmlFor="checkout-city" className="text-sm font-medium text-foreground">Ville de livraison</label>
+                <Input id="checkout-city" name="city" autoComplete="address-level2" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex : Casablanca" className="h-12 rounded-xl" />
                 <div className="flex flex-wrap gap-2 pt-1">
                   {COMMON_CITIES.map((item) => (
                     <button
                       key={item}
                       type="button"
                       onClick={() => setCity(item)}
-                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                      aria-pressed={city === item}
+                      className={`min-h-9 rounded-full px-3.5 text-sm font-medium transition-colors ${
                         city === item ? 'bg-foreground text-background' : 'bg-secondary text-foreground hover:bg-muted'
                       }`}
                     >
@@ -315,10 +347,10 @@ export default function Cart() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Note (optionnel)</label>
-                <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex : livraison après 18h" className="min-h-24 rounded-xl" />
+                <label htmlFor="checkout-note" className="text-sm font-medium text-foreground">Note (optionnel)</label>
+                <Textarea id="checkout-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex : livraison après 18h" className="min-h-24 rounded-xl" />
               </div>
-              {formError && <p className="text-sm text-destructive">{formError}</p>}
+              {formError && <p role="alert" className="text-sm text-destructive">{formError}</p>}
               <Link to="/track-order" className="inline-block text-sm font-medium text-primary hover:underline">
                 Déjà commandé ? Suivre une commande
               </Link>
@@ -371,7 +403,7 @@ export default function Cart() {
               </div>
             </div>
             {!isForm && (
-              <button type="button" onClick={clearCart} className="mt-2 min-h-10 w-full text-center text-sm text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={emptyCart} className="mt-2 min-h-11 w-full text-center text-sm text-muted-foreground hover:text-foreground">
                 Vider le panier
               </button>
             )}
